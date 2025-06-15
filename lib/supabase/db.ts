@@ -34,7 +34,7 @@ export async function getSharedExams(
     .from('exam_sets')
     .select(`
       *,
-      likes!inner(user_id)
+      exam_likes!inner(user_id)
     `)
     .eq('is_shared', true)
     .neq('user_id', userId) // 自分の試験は除外
@@ -58,7 +58,7 @@ export async function getSharedExams(
   // いいね状態を付与
   const examsWithLikes = (data || []).map(exam => ({
     ...exam,
-    isLiked: exam.likes?.some((like: any) => like.user_id === userId) || false
+    isLiked: exam.exam_likes?.some((like: any) => like.user_id === userId) || false
   }))
   
   return examsWithLikes
@@ -186,7 +186,7 @@ export async function toggleExamLike(
   if (hasLiked) {
     // いいねを削除
     const { error: deleteError } = await supabase
-      .from('likes')
+      .from('exam_likes')
       .delete()
       .eq('exam_id', examId)
       .eq('user_id', userId)
@@ -203,7 +203,7 @@ export async function toggleExamLike(
   } else {
     // いいねを追加
     const { error: insertError } = await supabase
-      .from('likes')
+      .from('exam_likes')
       .insert({ exam_id: examId, user_id: userId })
     
     if (insertError) throw insertError
