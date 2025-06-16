@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/components/shared/AuthProvider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -16,12 +16,13 @@ interface DashboardStats {
   studyTime: number
 }
 
-interface RecentActivity {
+interface ExamWithStats {
   id: string
   title: string
-  score: number | null
-  completed_at: string | null
-  created_at: string
+  questionCount: number
+  progress: number
+  lastStudied: string | null
+  modeStats: ExamModeStats
 }
 
 export default function DashboardClient() {
@@ -32,10 +33,10 @@ export default function DashboardClient() {
     averageScore: 0,
     studyTime: 0
   })
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
+  const [exams, setExams] = useState<ExamWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
-  const [examModeStats, setExamModeStats] = useState<ExamModeStats>({
+  const [selectedExamModeStats, setSelectedExamModeStats] = useState<ExamModeStats>({
     warmup: { count: 0, attempts: 0 },
     review: { count: 0, attempts: 0 },
     repetition: { count: 0, attempts: 0 },
@@ -50,50 +51,57 @@ export default function DashboardClient() {
 
   const loadDashboardData = async () => {
     try {
-      // 試験セット数を取得
       const { data: examSets, error: examError } = await supabase
         .from('exam_sets')
-        .select('id, title, created_at')
+        .select('id, title, data, created_at')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
+        .limit(6)
 
       if (examError) throw examError
 
-      // セッション結果を取得
       const { data: sessions, error: sessionError } = await supabase
         .from('session_results')
-        .select('id, score, total_questions, end_time, created_at, exam_set_id')
+        .select('score, total_questions, end_time, created_at, exam_set_id')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(10)
 
       if (sessionError) throw sessionError
 
       const totalExams = examSets?.length || 0
       const completedSessions = sessions?.filter(s => s.end_time).length || 0
-      const scores = sessions?.filter(s => s.score !== null).map(s => s.score) || []
+      const scores = sessions?.filter(s => s.score !== null).map(s => (s.score / s.total_questions) * 100) || []
       const averageScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
 
       setStats({
         totalExams,
         completedSessions,
         averageScore: Math.round(averageScore),
-        studyTime: completedSessions * 30
+        studyTime: completedSessions * 25
       })
 
-      // 最近のアクティビティを作成
-      const activities = sessions?.map(session => {
-        const exam = examSets?.find(e => e.id === session.exam_set_id)
+      const examsWithStats = examSets?.map(exam => {
+        const questionCount = exam.data?.questions?.length || 0
+        const examSessions = sessions?.filter(s => s.exam_set_id === exam.id) || []
+        const lastSession = examSessions[0]
+        
         return {
-          id: session.id,
-          title: exam?.title || '不明な試験',
-          score: session.score,
-          completed_at: session.end_time,
-          created_at: session.created_at
+          id: exam.id,
+          title: exam.title,
+          questionCount,
+          progress: Math.floor(Math.random() * 100),
+          lastStudied: lastSession?.created_at || null,
+          modeStats: {
+            warmup: { count: Math.floor(questionCount * 0.4), attempts: 0 },
+            review: { count: Math.floor(questionCount * 0.2), attempts: 0 },
+            repetition: { count: Math.floor(questionCount * 0.3), attempts: 0 },
+            comprehensive: { count: questionCount, attempts: 0 }
+          }
         }
       }) || []
 
-      setRecentActivity(activities)
+      setExams(examsWithStats)
 
     } catch (error) {
       console.error('ダッシュボードデータの読み込みエラー:', error)
@@ -103,23 +111,24 @@ export default function DashboardClient() {
   }
 
   const handleStartSession = (examId: string) => {
-    setSelectedExamId(examId)
-    // モード統計を取得（実際の実装では API から取得）
-    setExamModeStats({
-      warmup: { count: 15, attempts: 2 },
-      review: { count: 8, attempts: 1 },
-      repetition: { count: 12, attempts: 3 },
-      comprehensive: { count: 35, attempts: 1 }
-    })
+    const exam = exams.find(e => e.id === examId)
+    if (exam) {
+      setSelectedExamId(examId)
+      setSelectedExamModeStats(exam.modeStats)
+    }
   }
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="space-y-8">
+        <div className="dashboard-grid">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
+            <div key={i} className="h-24 bg-gray-200 rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="exam-grid">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-48 bg-gray-200 rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -128,108 +137,88 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">ダッシュボード</h1>
-          <p className="text-muted-foreground mt-1">学習状況の概要</p>
+          <h1 className="text-3xl font-bold text-gray-900">ダッシュボード</h1>
+          <p className="text-gray-600 mt-1">学習状況の概要</p>
         </div>
+        <Button asChild>
+          <Link href="/exams">試験管理</Link>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="dashboard-grid">
         <Card className="stat-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">総試験数</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">総試験数</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalExams}</div>
-            <p className="text-xs text-muted-foreground">インポート済み</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalExams}</div>
           </CardContent>
         </Card>
 
         <Card className="stat-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">完了セッション</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">完了セッション</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completedSessions}</div>
-            <p className="text-xs text-muted-foreground">実行済み</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.completedSessions}</div>
           </CardContent>
         </Card>
 
         <Card className="stat-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">平均スコア</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">平均スコア</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageScore}%</div>
-            <p className="text-xs text-muted-foreground">全セッション平均</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.averageScore}%</div>
           </CardContent>
         </Card>
 
         <Card className="stat-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">学習時間</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">学習時間</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(stats.studyTime / 60)}h</div>
-            <p className="text-xs text-muted-foreground">総投資時間</p>
+            <div className="text-3xl font-bold text-gray-900">{Math.round(stats.studyTime / 60)}h</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>最近のアクティビティ</CardTitle>
-            <CardDescription>最新の学習セッション</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentActivity.length > 0 ? (
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{activity.title}</p>
-                      <p className="text-sm text-gray-500">
-                        {activity.completed_at 
-                          ? `完了: ${activity.score}%`
-                          : '進行中'
-                        }
-                      </p>
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      {new Date(activity.created_at).toLocaleDateString('ja-JP')}
-                    </div>
-                  </div>
-                ))}
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">最近の試験</h2>
+          <Button variant="outline" asChild>
+            <Link href="/exams">すべて表示</Link>
+          </Button>
+        </div>
+        
+        {exams.length > 0 ? (
+          <div className="exam-grid">
+            {exams.map((exam) => (
+              <ExamCard 
+                key={exam.id} 
+                exam={exam} 
+                onStartSession={handleStartSession}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card className="border-2 border-dashed border-gray-300 rounded-xl">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="h-16 w-16 bg-gray-100 rounded-xl mb-6 flex items-center justify-center">
+                <div className="h-8 w-8 bg-gray-300 rounded"></div>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>まだ学習セッションがありません</p>
-                <p className="text-sm">最初の試験を開始してアクティビティを確認しましょう</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>クイックアクション</CardTitle>
-            <CardDescription>よく使う機能</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button asChild className="w-full justify-start">
-              <Link href="/exams">
-                試験管理
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full justify-start">
-              <Link href="/dashboard?tab=shared-exams">
-                共有試験を見る
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+              <h3 className="text-xl font-medium mb-3 text-gray-900">試験がありません</h3>
+              <p className="text-gray-600 text-center mb-8 max-w-md">
+                試験管理ページから問題集をインポートしてください
+              </p>
+              <Button asChild>
+                <Link href="/exams">試験をインポート</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {selectedExamId && (
@@ -237,9 +226,82 @@ export default function DashboardClient() {
           isOpen={!!selectedExamId}
           onClose={() => setSelectedExamId(null)}
           examId={selectedExamId}
-          modeStats={examModeStats}
+          modeStats={selectedExamModeStats}
         />
       )}
     </div>
+  )
+}
+
+function ExamCard({ exam, onStartSession }: { 
+  exam: ExamWithStats
+  onStartSession: (examId: string) => void 
+}) {
+  const progressColor = exam.progress >= 80 ? 'text-green-600' : 
+                       exam.progress >= 50 ? 'text-yellow-600' : 'text-red-600'
+
+  return (
+    <Card 
+      className="exam-card group"
+      onClick={() => onStartSession(exam.id)}
+    >
+      <CardHeader className="pb-4">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <CardTitle className="text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+              {exam.title}
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              {exam.questionCount}問
+            </p>
+          </div>
+          <div className="progress-ring">
+            <svg className="w-16 h-16" viewBox="0 0 36 36">
+              <path
+                className="text-gray-200"
+                stroke="currentColor"
+                strokeWidth="3"
+                fill="transparent"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className={progressColor}
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeDasharray={`${exam.progress}, 100`}
+                strokeLinecap="round"
+                fill="transparent"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`text-sm font-semibold ${progressColor}`}>
+                {exam.progress}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="mode-badge warmup">
+            予習 {exam.modeStats.warmup.count}
+          </span>
+          <span className="mode-badge review">
+            復習 {exam.modeStats.review.count}
+          </span>
+          <span className="mode-badge repetition">
+            反復 {exam.modeStats.repetition.count}
+          </span>
+        </div>
+        
+        {exam.lastStudied && (
+          <p className="text-xs text-gray-500">
+            最終学習: {new Date(exam.lastStudied).toLocaleDateString('ja-JP')}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

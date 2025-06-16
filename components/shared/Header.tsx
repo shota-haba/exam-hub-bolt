@@ -32,14 +32,14 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
           <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
               E
             </div>
-            <span className="text-xl font-semibold">Exam Hub</span>
+            <span className="text-xl font-semibold text-gray-900">Exam Hub</span>
           </Link>
         </div>
         
@@ -48,13 +48,13 @@ export default function Header() {
             <>
               <Link 
                 href="/dashboard" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
                 ダッシュボード
               </Link>
               <Link 
                 href="/exams" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
                 試験管理
               </Link>
@@ -64,9 +64,9 @@ export default function Header() {
         
         <div className="flex items-center space-x-4">
           {loading ? (
-            <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
+            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-full" />
           ) : !user ? (
-            <Button onClick={handleSignIn}>
+            <Button onClick={handleSignIn} className="px-6">
               Googleでログイン
             </Button>
           ) : (
@@ -78,7 +78,7 @@ export default function Header() {
                       src={user.user_metadata?.avatar_url || ''} 
                       alt={user.user_metadata?.name || 'User'} 
                     />
-                    <AvatarFallback className="bg-muted text-xs">
+                    <AvatarFallback className="bg-gray-100 text-xs">
                       {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -90,7 +90,7 @@ export default function Header() {
                     <p className="font-medium text-sm">
                       {user.user_metadata?.name || 'ユーザー'}
                     </p>
-                    <p className="w-[200px] truncate text-xs text-muted-foreground">
+                    <p className="w-[200px] truncate text-xs text-gray-500">
                       {user.email}
                     </p>
                   </div>
@@ -109,7 +109,7 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleSignOut} 
-                  className="text-destructive focus:text-destructive cursor-pointer"
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
                 >
                   ログアウト
                 </DropdownMenuItem>

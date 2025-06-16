@@ -23,13 +23,6 @@ const modeLabels = {
   [SessionMode.Comprehensive]: '総合'
 }
 
-const modeDescriptions = {
-  [SessionMode.Warmup]: '未学習問題に集中',
-  [SessionMode.Review]: '間違えた問題を重点的に',
-  [SessionMode.Repetition]: '正解問題で知識定着',
-  [SessionMode.Comprehensive]: '全問題で実力測定'
-}
-
 export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: SessionSetupModalProps) {
   const router = useRouter()
   const [selectedMode, setSelectedMode] = useState<SessionMode>(SessionMode.Warmup)
@@ -54,44 +47,40 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>学習セッション設定</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-gray-900">学習セッション設定</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <div>
-            <Label className="text-base font-medium">学習モード</Label>
+            <Label className="text-base font-medium text-gray-900">学習モード</Label>
             <RadioGroup 
               value={selectedMode} 
               onValueChange={(value) => {
                 setSelectedMode(value as SessionMode)
                 setQuestionCount([Math.min(questionCount[0], modeStats[value as SessionMode]?.count || 0)])
               }}
-              className="mt-3"
+              className="mt-3 space-y-3"
             >
               {Object.entries(modeLabels).map(([mode, label]) => {
                 const count = modeStats[mode as SessionMode]?.count || 0
                 const isDisabled = count === 0
                 
                 return (
-                  <div key={mode} className="flex items-center space-x-2">
+                  <div key={mode} className="flex items-center space-x-3">
                     <RadioGroupItem 
                       value={mode} 
                       id={mode}
                       disabled={isDisabled}
+                      className="mt-1"
                     />
                     <Label 
                       htmlFor={mode} 
                       className={`flex-1 cursor-pointer ${isDisabled ? 'opacity-50' : ''}`}
                     >
                       <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-medium">{label}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {modeDescriptions[mode as SessionMode]}
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          ({count}問)
+                        <div className="font-medium text-gray-900">{label}</div>
+                        <div className="text-sm text-gray-500">
+                          {count}問
                         </div>
                       </div>
                     </Label>
@@ -102,7 +91,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
           </div>
 
           <div>
-            <Label className="text-base font-medium">
+            <Label className="text-base font-medium text-gray-900">
               出題数: {questionCount[0]}問
             </Label>
             <Slider
@@ -114,14 +103,14 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               className="mt-3"
               disabled={isStartDisabled}
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>5問</span>
               <span>{maxQuestions}問</span>
             </div>
           </div>
 
           <div>
-            <Label className="text-base font-medium">
+            <Label className="text-base font-medium text-gray-900">
               1問あたりの時間: {timePerQuestion[0]}秒
             </Label>
             <Slider
@@ -132,19 +121,20 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               step={15}
               className="mt-3"
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>15秒</span>
               <span>120秒</span>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>
               キャンセル
             </Button>
             <Button 
               onClick={handleStart}
               disabled={isStartDisabled}
+              className="px-6"
             >
               学習開始
             </Button>
