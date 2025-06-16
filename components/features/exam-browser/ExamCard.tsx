@@ -105,3 +105,5 @@ export function ExamCard({ exam, onLikeChange, onShareChange }: ExamCardProps) {
     </Card>
   )
 }
+
+export default ExamCard
