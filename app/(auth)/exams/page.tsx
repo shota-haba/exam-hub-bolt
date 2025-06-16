@@ -10,8 +10,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import PageHeader from '@/components/shared/PageHeader'
-import StatCard from '@/components/shared/StatCard'
 import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
 import { getUserExams, getDashboardStats, getExamProgress } from '@/lib/supabase/db'
@@ -34,33 +32,53 @@ export default async function ExamsPage() {
 
   return (
     <main className="container py-8 px-4 max-w-7xl mx-auto space-y-8">
-      <PageHeader
-        title="試験管理"
-        description="問題集のインポート・管理"
-      />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">試験管理</h1>
+          <p className="text-muted-foreground mt-1">問題集のインポート・管理</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="試験数"
-          value={stats.totalExams}
-          subtitle="インポート済み"
-        />
-        <StatCard
-          title="問題数"
-          value={stats.totalQuestions}
-          subtitle="全試験合計"
-        />
-        <StatCard
-          title="平均進捗"
-          value={`${stats.averageProgress}%`}
-          subtitle="全試験平均"
-          trend={{ value: 12, isPositive: true }}
-        />
-        <StatCard
-          title="平均解答時間"
-          value={`${stats.averageAnswerTime}秒`}
-          subtitle="1問あたり"
-        />
+        <Card className="stat-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">試験数</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalExams}</div>
+            <p className="text-xs text-muted-foreground">インポート済み</p>
+          </CardContent>
+        </Card>
+
+        <Card className="stat-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">問題数</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalQuestions}</div>
+            <p className="text-xs text-muted-foreground">全試験合計</p>
+          </CardContent>
+        </Card>
+
+        <Card className="stat-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">平均進捗</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.averageProgress}%</div>
+            <p className="text-xs text-muted-foreground">全試験平均</p>
+          </CardContent>
+        </Card>
+
+        <Card className="stat-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">平均解答時間</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.averageAnswerTime}秒</div>
+            <p className="text-xs text-muted-foreground">1問あたり</p>
+          </CardContent>
+        </Card>
       </div>
 
       <ExamImport />
@@ -98,12 +116,6 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
   const questionCount = exam.data?.questions?.length || 0
   const progress = await getExamProgress(exam.id, userId)
 
-  const handleDelete = async () => {
-    'use server'
-    if (!confirm('この試験を削除しますか？')) return
-    await deleteExamAction(exam.id)
-  }
-
   return (
     <Card className="exam-card">
       <CardHeader className="pb-4">
@@ -121,12 +133,22 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <form action={handleDelete}>
-                <DropdownMenuItem 
-                  type="submit"
-                  className="text-destructive focus:text-destructive"
-                >
-                  削除
+              <form action={async () => {
+                'use server'
+                await deleteExamAction(exam.id)
+              }}>
+                <DropdownMenuItem asChild>
+                  <button 
+                    type="submit"
+                    className="w-full text-left text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      if (!confirm('この試験を削除しますか？')) {
+                        e.preventDefault()
+                      }
+                    }}
+                  >
+                    削除
+                  </button>
                 </DropdownMenuItem>
               </form>
             </DropdownMenuContent>
@@ -157,7 +179,7 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
       
       <CardFooter className="pt-0">
         <Button asChild className="w-full">
-          <Link href="/dashboard">
+          <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
             学習開始
           </Link>
         </Button>

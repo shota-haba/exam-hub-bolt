@@ -1,104 +1,123 @@
 'use client'
 
 import { useAuth } from '@/components/shared/AuthProvider'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User, BookOpen } from 'lucide-react'
-import Link from 'next/link'
 
-export function Header() {
-  const { user, signOut, loading } = useAuth()
+export default function Header() {
+  const { user, signInWithGoogle, signOut, loading } = useAuth()
 
-  if (loading) {
-    return (
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-xl font-semibold">
-              Exam Hub
-            </Link>
-            <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
-          </div>
-        </div>
-      </header>
-    )
+  const handleSignIn = async () => {
+    try {
+      await signInWithGoogle()
+    } catch (error) {
+      console.error('サインイン失敗:', error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('サインアウト失敗:', error)
+    }
   }
 
   return (
-    <header className="border-b bg-white">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-xl font-semibold flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
-            Exam Hub
-          </Link>
-          
-          {user ? (
-            <div className="flex items-center gap-4">
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/dashboard" className="text-sm hover:text-blue-600">
-                  ダッシュボード
-                </Link>
-                <Link href="/exams" className="text-sm hover:text-blue-600">
-                  試験管理
-                </Link>
-              </nav>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback>
-                        {user.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.user_metadata?.full_name}</p>
-                      <p className="w-[200px] truncate text-sm text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      ダッシュボード
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/exams" className="flex items-center">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      試験管理
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="flex items-center">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    ログアウト
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
+        <div className="flex items-center space-x-4">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+              E
             </div>
+            <span className="text-xl font-semibold">Exam Hub</span>
+          </Link>
+        </div>
+        
+        <nav className="hidden md:flex items-center space-x-6">
+          {user && (
+            <>
+              <Link 
+                href="/dashboard" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ダッシュボード
+              </Link>
+              <Link 
+                href="/exams" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                試験管理
+              </Link>
+            </>
+          )}
+        </nav>
+        
+        <div className="flex items-center space-x-4">
+          {loading ? (
+            <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
+          ) : !user ? (
+            <Button onClick={handleSignIn}>
+              Googleでログイン
+            </Button>
           ) : (
-            <div>読み込み中...</div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                      src={user.user_metadata?.avatar_url || ''} 
+                      alt={user.user_metadata?.name || 'User'} 
+                    />
+                    <AvatarFallback className="bg-muted text-xs">
+                      {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium text-sm">
+                      {user.user_metadata?.name || 'ユーザー'}
+                    </p>
+                    <p className="w-[200px] truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard" className="cursor-pointer">
+                    ダッシュボード
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/exams" className="cursor-pointer">
+                    試験管理
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
     </header>
   )
 }
-
-export default Header

@@ -3,7 +3,6 @@
 import { useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Heart, Clock } from 'lucide-react'
 
 export function SortToggle() {
   const router = useRouter()
@@ -26,9 +25,7 @@ export function SortToggle() {
         size="sm"
         onClick={() => handleSortChange('newest')}
         disabled={isPending}
-        className="flex items-center gap-2"
       >
-        <Clock className="h-4 w-4" />
         新着順
       </Button>
       <Button
@@ -36,9 +33,7 @@ export function SortToggle() {
         size="sm"
         onClick={() => handleSortChange('likes')}
         disabled={isPending}
-        className="flex items-center gap-2"
       >
-        <Heart className="h-4 w-4" />
         人気順
       </Button>
     </div>

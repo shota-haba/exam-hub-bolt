@@ -37,14 +37,12 @@ export async function getSharedExams(
       exam_likes!inner(user_id)
     `)
     .eq('is_shared', true)
-    .neq('user_id', userId) // 自分の試験は除外
+    .neq('user_id', userId)
   
-  // 検索条件
   if (options.searchTerm) {
     query = query.ilike('title', `%${options.searchTerm}%`)
   }
   
-  // ソート条件
   if (options.sortBy === 'likes') {
     query = query.order('likes_count', { ascending: false })
   } else {
@@ -55,7 +53,6 @@ export async function getSharedExams(
   
   if (error) throw error
   
-  // いいね状態を付与
   const examsWithLikes = (data || []).map(exam => ({
     ...exam,
     isLiked: exam.exam_likes?.some((like: any) => like.user_id === userId) || false
@@ -92,7 +89,6 @@ export async function getQuestionsForSession(
 ): Promise<Question[]> {
   const supabase = await createClient()
   
-  // 試験セットを取得
   const { data: examSet, error: examError } = await supabase
     .from('exam_sets')
     .select('data')
@@ -103,7 +99,6 @@ export async function getQuestionsForSession(
   
   const allQuestions = examSet.data.questions as Question[]
   
-  // ユーザー進捗を取得
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('question_id, last_result')
@@ -114,7 +109,6 @@ export async function getQuestionsForSession(
     (progressData || []).map(p => [p.question_id, p.last_result])
   )
   
-  // モードに応じて問題をフィルタリング
   let targetQuestions: Question[] = []
   
   switch (mode) {
@@ -134,12 +128,10 @@ export async function getQuestionsForSession(
   
   if (targetQuestions.length === 0) return []
   
-  // 要求数より少ない場合は全問題を返す
   if (targetQuestions.length <= count) {
     return targetQuestions.sort(() => Math.random() - 0.5)
   }
   
-  // ランダムに選択
   return targetQuestions
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
@@ -151,7 +143,6 @@ export async function getQuestionsForSession(
 export async function getExamStatsByMode(examId: string, userId: string): Promise<ExamModeStats> {
   const supabase = await createClient()
   
-  // 試験セットを取得
   const { data: examSet } = await supabase
     .from('exam_sets')
     .select('data')
@@ -169,7 +160,6 @@ export async function getExamStatsByMode(examId: string, userId: string): Promis
   
   const allQuestions = examSet.data.questions as Question[]
   
-  // ユーザー進捗を取得
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('question_id, last_result')
@@ -180,7 +170,6 @@ export async function getExamStatsByMode(examId: string, userId: string): Promis
     (progressData || []).map(p => [p.question_id, p.last_result])
   )
   
-  // セッション実行回数を取得
   const { data: sessionData } = await supabase
     .from('session_results')
     .select('session_mode')
@@ -192,7 +181,6 @@ export async function getExamStatsByMode(examId: string, userId: string): Promis
     return acc
   }, {} as Record<string, number>)
   
-  // 各モードの問題数を計算
   const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
   const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
   const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
@@ -212,7 +200,6 @@ export async function getExamStatsByMode(examId: string, userId: string): Promis
 export async function getExamProgress(examId: string, userId: string): Promise<number> {
   const supabase = await createClient()
   
-  // 試験セットを取得
   const { data: examSet } = await supabase
     .from('exam_sets')
     .select('data')
@@ -223,7 +210,6 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
   
   const totalQuestions = examSet.data.questions.length
   
-  // 回答済み問題数を取得
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('question_id')
@@ -241,7 +227,6 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const supabase = await createClient()
   
-  // 試験数と問題数
   const { data: exams } = await supabase
     .from('exam_sets')
     .select('data')
@@ -251,7 +236,6 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
   const totalQuestions = exams?.reduce((sum, exam) => 
     sum + (exam.data?.questions?.length || 0), 0) || 0
   
-  // セッション統計
   const { data: sessions } = await supabase
     .from('session_results')
     .select('start_time, end_time, score, total_questions')
@@ -259,19 +243,17 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
     .order('created_at', { ascending: false })
     .limit(10)
   
-  // 平均解答時間を計算
   const averageAnswerTime = sessions?.length > 0 
     ? sessions.reduce((total, session) => {
         const start = new Date(session.start_time).getTime()
         const end = new Date(session.end_time).getTime()
-        const sessionTime = (end - start) / 1000 // 秒単位
+        const sessionTime = (end - start) / 1000
         return total + (sessionTime / session.total_questions)
       }, 0) / sessions.length
     : 0
   
   const recentSessions = sessions?.length || 0
   
-  // 平均進捗（仮の計算）
   const averageProgress = sessions?.length > 0 
     ? sessions.reduce((sum, s) => sum + (s.score / s.total_questions * 100), 0) / sessions.length
     : 0
@@ -282,7 +264,7 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
     averageProgress: Math.round(averageProgress),
     averageAnswerTime: Math.round(averageAnswerTime),
     recentSessions,
-    weeklyStreak: 7 // 仮の値
+    weeklyStreak: 7
   }
 }
 
@@ -342,7 +324,6 @@ export async function toggleExamLike(
   const supabase = await createClient()
   
   if (hasLiked) {
-    // いいねを削除
     const { error: deleteError } = await supabase
       .from('exam_likes')
       .delete()
@@ -351,26 +332,19 @@ export async function toggleExamLike(
     
     if (deleteError) throw deleteError
     
-    // カウントを減らす
     const { error: updateError } = await supabase
-      .from('exam_sets')
-      .update({ likes_count: supabase.raw('likes_count - 1') })
-      .eq('id', examId)
+      .rpc('decrement_likes_count', { exam_id: examId })
     
     if (updateError) throw updateError
   } else {
-    // いいねを追加
     const { error: insertError } = await supabase
       .from('exam_likes')
       .insert({ exam_id: examId, user_id: userId })
     
     if (insertError) throw insertError
     
-    // カウントを増やす
     const { error: updateError } = await supabase
-      .from('exam_sets')
-      .update({ likes_count: supabase.raw('likes_count + 1') })
-      .eq('id', examId)
+      .rpc('increment_likes_count', { exam_id: examId })
     
     if (updateError) throw updateError
   }
