@@ -46,13 +46,13 @@ export default function DashboardClient() {
     try {
       // Load user exam sessions
       const { data: sessions, error } = await supabase
-        .from('exam_sessions')
+        .from('session_results')
         .select(`
           id,
           score,
-          completed_at,
+          end_time,
           created_at,
-          exams (
+          exam_sets (
             id,
             title
           )
@@ -64,7 +64,7 @@ export default function DashboardClient() {
       if (error) throw error
 
       const totalExams = sessions?.length || 0
-      const completedExams = sessions?.filter(s => s.completed_at).length || 0
+      const completedExams = sessions?.filter(s => s.end_time).length || 0
       const scores = sessions?.filter(s => s.score !== null).map(s => s.score) || []
       const averageScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
 
@@ -72,19 +72,19 @@ export default function DashboardClient() {
         totalExams,
         completedExams,
         averageScore: Math.round(averageScore),
-        studyTime: completedExams * 45 // Estimate 45 minutes per completed exam
+        studyTime: completedExams * 45 // 完了した試験1つあたり45分と推定
       })
 
       setRecentExams(sessions?.map(session => ({
         id: session.id,
-        title: session.exams?.title || 'Unknown Exam',
+        title: session.exam_sets?.title || '不明な試験',
         score: session.score,
-        completed_at: session.completed_at,
+        completed_at: session.end_time,
         created_at: session.created_at
       })) || [])
 
     } catch (error) {
-      console.error('Error loading dashboard data:', error)
+      console.error('ダッシュボードデータの読み込みエラー:', error)
     } finally {
       setLoading(false)
     }
@@ -106,42 +106,42 @@ export default function DashboardClient() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Dashboard"
-        description="Your exam preparation overview"
+        title="ダッシュボード"
+        description="学習状況の概要"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
-          title="Total Attempts"
+          title="総試行数"
           value={stats.totalExams}
           icon={BookOpen}
-          description="Exam sessions started"
+          description="開始したセッション数"
         />
         <StatCard
-          title="Completed"
+          title="完了数"
           value={stats.completedExams}
           icon={Target}
-          description="Exams finished"
+          description="完了した試験数"
         />
         <StatCard
-          title="Avg Score"
+          title="平均スコア"
           value={`${stats.averageScore}%`}
           icon={TrendingUp}
-          description="Average performance"
+          description="平均パフォーマンス"
         />
         <StatCard
-          title="Study Time"
+          title="学習時間"
           value={`${Math.round(stats.studyTime / 60)}h`}
           icon={Clock}
-          description="Total time invested"
+          description="総投資時間"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest exam sessions</CardDescription>
+            <CardTitle>最近のアクティビティ</CardTitle>
+            <CardDescription>最新の試験セッション</CardDescription>
           </CardHeader>
           <CardContent>
             {recentExams.length > 0 ? (
@@ -152,13 +152,13 @@ export default function DashboardClient() {
                       <p className="font-medium">{exam.title}</p>
                       <p className="text-sm text-gray-500">
                         {exam.completed_at 
-                          ? `Completed: ${exam.score}%`
-                          : 'In progress'
+                          ? `完了: ${exam.score}%`
+                          : '進行中'
                         }
                       </p>
                     </div>
                     <div className="text-sm text-gray-400">
-                      {new Date(exam.created_at).toLocaleDateString()}
+                      {new Date(exam.created_at).toLocaleDateString('ja-JP')}
                     </div>
                   </div>
                 ))}
@@ -166,8 +166,8 @@ export default function DashboardClient() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No exam sessions yet</p>
-                <p className="text-sm">Start your first exam to see activity here</p>
+                <p>まだ試験セッションがありません</p>
+                <p className="text-sm">最初の試験を開始してアクティビティを確認しましょう</p>
               </div>
             )}
           </CardContent>
@@ -175,26 +175,26 @@ export default function DashboardClient() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardTitle>クイックアクション</CardTitle>
+            <CardDescription>よく使う機能とショートカット</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button asChild className="w-full justify-start">
               <Link href="/exams">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Browse Available Exams
+                利用可能な試験を見る
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full justify-start">
               <Link href="/exams?filter=recent">
                 <Clock className="mr-2 h-4 w-4" />
-                Continue Recent Session
+                最近のセッションを続ける
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full justify-start">
               <Link href="/exams?sort=popular">
                 <TrendingUp className="mr-2 h-4 w-4" />
-                Popular Exams
+                人気の試験
               </Link>
             </Button>
           </CardContent>

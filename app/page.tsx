@@ -37,10 +37,10 @@ export default function HomePage() {
             <BookOpen className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            ExamPrep
+            Exam Hub
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Internal exam preparation platform for engineers
+            エンジニア向け試験対策プラットフォーム
           </p>
         </div>
 
@@ -48,9 +48,9 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <Brain className="h-8 w-8 text-blue-600 mb-2" />
-              <CardTitle>Practice Tests</CardTitle>
+              <CardTitle>問題演習</CardTitle>
               <CardDescription>
-                Access curated exam questions and practice sessions
+                厳選された試験問題で効率的な学習
               </CardDescription>
             </CardHeader>
           </Card>
@@ -58,9 +58,9 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <Target className="h-8 w-8 text-green-600 mb-2" />
-              <CardTitle>Track Progress</CardTitle>
+              <CardTitle>進捗管理</CardTitle>
               <CardDescription>
-                Monitor performance and identify areas for improvement
+                パフォーマンス追跡と弱点分析
               </CardDescription>
             </CardHeader>
           </Card>
@@ -68,9 +68,9 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <TrendingUp className="h-8 w-8 text-purple-600 mb-2" />
-              <CardTitle>Analytics</CardTitle>
+              <CardTitle>統計分析</CardTitle>
               <CardDescription>
-                Detailed insights into your exam preparation progress
+                詳細な学習データと改善提案
               </CardDescription>
             </CardHeader>
           </Card>
@@ -79,14 +79,14 @@ export default function HomePage() {
         <div className="text-center">
           <Card className="max-w-md mx-auto">
             <CardHeader>
-              <CardTitle>Get Started</CardTitle>
+              <CardTitle>ログイン</CardTitle>
               <CardDescription>
-                Sign in with your Google account to access the platform
+                Googleアカウントでアクセス
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={signInWithGoogle} className="w-full">
-                Sign in with Google
+                Googleでログイン
               </Button>
             </CardContent>
           </Card>

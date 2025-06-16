@@ -1,24 +1,39 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 
-interface SearchBarProps {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-}
+export function SearchBar() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
 
-export function SearchBar({ value, onChange, placeholder = "Search..." }: SearchBarProps) {
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams)
+      if (value) {
+        params.set('q', value)
+      } else {
+        params.delete('q')
+      }
+      router.push(`/dashboard?${params.toString()}`)
+    })
+  }
+
   return (
-    <div className="relative flex-1 max-w-md">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        placeholder="試験を検索..."
+        value={searchTerm}
+        onChange={(e) => handleSearch(e.target.value)}
         className="pl-10"
+        disabled={isPending}
       />
     </div>
   )

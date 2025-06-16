@@ -22,7 +22,7 @@ export function Header() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-xl font-semibold">
-              ExamPrep
+              Exam Hub
             </Link>
             <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
           </div>
@@ -37,17 +37,17 @@ export function Header() {
         <div className="flex items-center justify-between">
           <Link href="/" className="text-xl font-semibold flex items-center gap-2">
             <BookOpen className="h-6 w-6" />
-            ExamPrep
+            Exam Hub
           </Link>
           
           {user ? (
             <div className="flex items-center gap-4">
               <nav className="hidden md:flex items-center gap-4">
                 <Link href="/dashboard" className="text-sm hover:text-blue-600">
-                  Dashboard
+                  ダッシュボード
                 </Link>
                 <Link href="/exams" className="text-sm hover:text-blue-600">
-                  Browse Exams
+                  試験管理
                 </Link>
               </nav>
               
@@ -75,25 +75,25 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
-                      Dashboard
+                      ダッシュボード
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/exams" className="flex items-center">
                       <BookOpen className="mr-2 h-4 w-4" />
-                      Exams
+                      試験管理
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="flex items-center">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    ログアウト
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           ) : (
-            <div>Loading...</div>
+            <div>読み込み中...</div>
           )}
         </div>
       </div>
