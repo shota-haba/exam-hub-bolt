@@ -1,16 +1,20 @@
-import { ExamSet } from '@/lib/types'
+import { ExamSet, ExamModeStats } from '@/lib/types'
 import ExamCard from './ExamCard'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface ExamListProps {
   exams: ExamSet[]
   showLikeButton?: boolean
+  modeStats?: Record<string, ExamModeStats>
+  onStartSession?: (examId: string) => void
   emptyMessage?: string
 }
 
 export default function ExamList({ 
   exams, 
-  showLikeButton = false, 
+  showLikeButton = false,
+  modeStats,
+  onStartSession,
   emptyMessage = "試験がありません" 
 }: ExamListProps) {
   if (exams.length === 0) {
@@ -33,6 +37,8 @@ export default function ExamList({
           key={exam.id} 
           exam={exam} 
           showLikeButton={showLikeButton}
+          modeStats={modeStats?.[exam.id]}
+          onStartSession={onStartSession}
         />
       ))}
     </div>

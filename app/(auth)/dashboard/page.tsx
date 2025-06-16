@@ -7,9 +7,11 @@ import StatCard from '@/components/shared/StatCard'
 import ExamList from '@/components/features/exam-browser/ExamList'
 import { SearchBar } from '@/components/features/exam-browser/SearchBar'
 import { SortToggle } from '@/components/features/exam-browser/SortToggle'
-import { getDashboardStats, getUserExams, getSharedExams } from '@/lib/supabase/db'
+import { SessionSetupModal } from '@/components/features/exam-session/SessionSetupModal'
+import { getDashboardStats, getUserExams, getSharedExams, getExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
-import { SharedExamsOptions } from '@/lib/types'
+import { SharedExamsOptions, ExamSet, ExamModeStats } from '@/lib/types'
+import DashboardClient from './DashboardClient'
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -35,8 +37,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     getUserExams(user.id)
   ])
 
+  // 各試験のモード別統計を取得
+  const userExamsWithStats = await Promise.all(
+    userExams.map(async (exam) => {
+      const modeStats = await getExamStatsByMode(exam.id, user.id)
+      return { exam, modeStats }
+    })
+  )
+
   // 共有試験は「共有試験」タブが選択されている場合のみ取得
-  let sharedExams = []
+  let sharedExams: ExamSet[] = []
   if (activeTab === 'shared-exams') {
     const options: SharedExamsOptions = {
       sortBy: params.sort || 'newest',
@@ -74,9 +84,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           trend={{ value: 12, isPositive: true }}
         />
         <StatCard
-          title="学習時間"
-          value={`${Math.floor(stats.totalSessionTime / 60)}h ${stats.totalSessionTime % 60}m`}
-          subtitle="今週"
+          title="平均解答時間"
+          value={`${stats.averageAnswerTime}秒`}
+          subtitle="1問あたり"
         />
       </div>
 
@@ -99,9 +109,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
           
           <Suspense fallback={<div>読み込み中...</div>}>
-            <ExamList 
-              exams={userExams} 
-              emptyMessage="試験がありません。試験管理ページから問題集をインポートしてください。"
+            <DashboardClient 
+              userExamsWithStats={userExamsWithStats}
+              sharedExams={sharedExams}
+              activeTab={activeTab}
             />
           </Suspense>
         </TabsContent>

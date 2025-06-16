@@ -122,7 +122,7 @@ export interface DashboardStats {
   totalExams: number
   totalQuestions: number
   averageProgress: number
-  totalSessionTime: number
+  averageAnswerTime: number
   recentSessions: number
   weeklyStreak: number
 }
@@ -142,4 +142,12 @@ export interface SessionSaveData {
   score: number
   totalQuestions: number
   questionsData: QuestionResult[]
+}
+
+// ダッシュボードで表示するモード別統計
+export interface ExamModeStats {
+  warmup: { count: number; attempts: number };
+  review: { count: number; attempts: number };
+  repetition: { count: number; attempts: number };
+  comprehensive: { count: number; attempts: number };
 }

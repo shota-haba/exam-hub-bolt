@@ -14,7 +14,7 @@ import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
 import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
-import { getUserExams, getDashboardStats } from '@/lib/supabase/db'
+import { getUserExams, getDashboardStats, getExamProgress } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
 import { deleteExamAction } from '@/actions/exam'
@@ -57,9 +57,9 @@ export default async function ExamsPage() {
           trend={{ value: 12, isPositive: true }}
         />
         <StatCard
-          title="学習時間"
-          value={`${Math.floor(stats.totalSessionTime / 60)}h ${stats.totalSessionTime % 60}m`}
-          subtitle="今週"
+          title="平均解答時間"
+          value={`${stats.averageAnswerTime}秒`}
+          subtitle="1問あたり"
         />
       </div>
 
@@ -72,7 +72,7 @@ export default async function ExamsPage() {
           {exams.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {exams.map((exam) => (
-                <ExamManagementCard key={exam.id} exam={exam} />
+                <ExamManagementCard key={exam.id} exam={exam} userId={user.id} />
               ))}
             </div>
           ) : (
@@ -94,9 +94,9 @@ export default async function ExamsPage() {
   )
 }
 
-function ExamManagementCard({ exam }: { exam: ExamSet }) {
+async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: string }) {
   const questionCount = exam.data?.questions?.length || 0
-  const progress = 70 // 仮の進捗値
+  const progress = await getExamProgress(exam.id, userId)
 
   const handleDelete = async () => {
     if (!confirm('この試験を削除しますか？')) return
@@ -151,14 +151,6 @@ function ExamManagementCard({ exam }: { exam: ExamSet }) {
 
         <ShareToggle examId={exam.id} initialShared={exam.is_shared} />
       </CardContent>
-      
-      <CardFooter className="pt-0">
-        <Button asChild className="w-full">
-          <Link href="/dashboard">
-            学習開始
-          </Link>
-        </Button>
-      </CardFooter>
     </Card>
   )
 }
