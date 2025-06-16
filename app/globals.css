@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 222.2 84% 4.9%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -22,15 +22,8 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
-    
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 32.5 94.6% 43.7%;
-    --warning-foreground: 210 40% 98%;
-    --info: 221.2 83.2% 53.3%;
-    --info-foreground: 210 40% 98%;
   }
 
   .dark {
@@ -40,7 +33,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 84% 4.9%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -52,14 +45,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
-    
-    --success: 142.1 70.6% 45.3%;
-    --success-foreground: 144.9 80.4% 10%;
-    --warning: 32.5 94.6% 43.7%;
-    --warning-foreground: 20.5 90.2% 4.3%;
-    --info: 217.2 91.2% 59.8%;
-    --info-foreground: 222.2 84% 4.9%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -70,99 +56,56 @@
   
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
   }
 }
 
 @layer components {
-  .dashboard-grid {
+  .analytics-grid {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
   }
   
-  .exam-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6;
+  .metric-card {
+    @apply bg-card border rounded-lg p-6 hover:bg-accent/50 transition-colors;
   }
   
-  .stat-card {
-    @apply bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200;
+  .exam-grid {
+    @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4;
   }
   
   .exam-card {
-    @apply bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer;
+    @apply bg-card border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer;
   }
   
-  .exam-card:hover {
-    @apply transform -translate-y-1;
+  .progress-bar {
+    @apply w-full bg-muted rounded-full h-1.5;
   }
   
-  .mode-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  .progress-fill {
+    @apply h-1.5 rounded-full bg-foreground transition-all duration-300;
   }
   
-  .mode-badge.warmup {
-    @apply bg-blue-100 text-blue-800;
+  .mode-stats {
+    @apply grid grid-cols-4 gap-2 text-xs;
   }
   
-  .mode-badge.review {
-    @apply bg-red-100 text-red-800;
+  .mode-stat {
+    @apply text-center p-2 bg-muted/50 rounded;
   }
   
-  .mode-badge.repetition {
-    @apply bg-green-100 text-green-800;
+  .chart-container {
+    @apply h-64 w-full;
   }
   
-  .mode-badge.comprehensive {
-    @apply bg-purple-100 text-purple-800;
+  .data-table {
+    @apply w-full border-collapse;
   }
   
-  .progress-ring {
-    @apply relative inline-flex items-center justify-center w-16 h-16;
+  .data-table th {
+    @apply border-b px-4 py-2 text-left text-xs font-medium text-muted-foreground;
   }
   
-  .progress-ring svg {
-    @apply transform -rotate-90;
-  }
-  
-  .question-choice {
-    @apply relative rounded-lg border border-gray-200 p-4 transition-all hover:bg-gray-50 cursor-pointer;
-  }
-  
-  .question-choice.correct {
-    @apply border-green-500 bg-green-50;
-  }
-  
-  .question-choice.incorrect {
-    @apply border-red-500 bg-red-50;
-  }
-  
-  .explanation-box {
-    @apply mt-6 p-4 border border-blue-200 rounded-lg bg-blue-50;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    @apply px-4;
-  }
-  
-  .dashboard-grid {
-    @apply grid-cols-2 gap-3;
-  }
-  
-  .exam-grid {
-    @apply grid-cols-1 gap-4;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .data-table td {
+    @apply border-b px-4 py-2 text-sm;
   }
 }

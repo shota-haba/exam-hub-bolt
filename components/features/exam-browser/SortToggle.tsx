@@ -19,14 +19,14 @@ export function SortToggle() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <Button
         variant={currentSort === 'newest' ? 'default' : 'outline'}
         size="sm"
         onClick={() => handleSortChange('newest')}
         disabled={isPending}
       >
-        新着順
+        Recent
       </Button>
       <Button
         variant={currentSort === 'likes' ? 'default' : 'outline'}
@@ -34,7 +34,7 @@ export function SortToggle() {
         onClick={() => handleSortChange('likes')}
         disabled={isPending}
       >
-        人気順
+        Popular
       </Button>
     </div>
   )

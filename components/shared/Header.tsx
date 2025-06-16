@@ -19,7 +19,7 @@ export default function Header() {
     try {
       await signInWithGoogle()
     } catch (error) {
-      console.error('サインイン失敗:', error)
+      console.error('Sign in failed:', error)
     }
   }
 
@@ -27,19 +27,19 @@ export default function Header() {
     try {
       await signOut()
     } catch (error) {
-      console.error('サインアウト失敗:', error)
+      console.error('Sign out failed:', error)
     }
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-foreground text-background font-bold text-xs">
               E
             </div>
-            <span className="text-xl font-semibold text-gray-900">Exam Hub</span>
+            <span className="font-semibold">Exam Analytics</span>
           </Link>
         </div>
         
@@ -48,15 +48,15 @@ export default function Header() {
             <>
               <Link 
                 href="/dashboard" 
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                ダッシュボード
+                Dashboard
               </Link>
               <Link 
                 href="/exams" 
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                試験管理
+                Manage
               </Link>
             </>
           )}
@@ -64,33 +64,33 @@ export default function Header() {
         
         <div className="flex items-center space-x-4">
           {loading ? (
-            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-full" />
+            <div className="h-6 w-6 bg-muted animate-pulse rounded-full" />
           ) : !user ? (
-            <Button onClick={handleSignIn} className="px-6">
-              Googleでログイン
+            <Button onClick={handleSignIn} size="sm">
+              Sign In
             </Button>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-6 w-6 rounded-full">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage 
                       src={user.user_metadata?.avatar_url || ''} 
                       alt={user.user_metadata?.name || 'User'} 
                     />
-                    <AvatarFallback className="bg-gray-100 text-xs">
+                    <AvatarFallback className="text-xs">
                       {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-48" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium text-sm">
-                      {user.user_metadata?.name || 'ユーザー'}
+                      {user.user_metadata?.name || 'User'}
                     </p>
-                    <p className="w-[200px] truncate text-xs text-gray-500">
+                    <p className="w-[180px] truncate text-xs text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
@@ -98,20 +98,20 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="cursor-pointer">
-                    ダッシュボード
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/exams" className="cursor-pointer">
-                    試験管理
+                    Manage
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleSignOut} 
-                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                  className="text-destructive focus:text-destructive cursor-pointer"
                 >
-                  ログアウト
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -19,13 +19,13 @@ export function ExamImport() {
       
       if (result.success) {
         toast({
-          title: 'インポート完了',
-          description: '試験をインポートしました',
+          title: 'Import complete',
+          description: 'Exam data imported successfully',
         })
       } else {
         toast({
-          title: 'インポートエラー',
-          description: result.error || 'インポートに失敗しました',
+          title: 'Import failed',
+          description: result.error || 'Failed to import exam data',
           variant: 'destructive',
         })
       }
@@ -33,11 +33,11 @@ export function ExamImport() {
   }
 
   return (
-    <Card className="border-2 border-dashed border-gray-300 bg-gray-50 hover:border-gray-400 transition-colors">
+    <Card className="border-dashed bg-muted/20 hover:bg-muted/30 transition-colors">
       <CardHeader>
-        <CardTitle className="text-gray-900">試験インポート</CardTitle>
-        <CardDescription className="text-gray-600">
-          JSON形式の問題集をアップロード
+        <CardTitle className="text-sm font-medium">Import Exam Data</CardTitle>
+        <CardDescription className="text-xs">
+          Upload JSON format question sets
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -46,10 +46,10 @@ export function ExamImport() {
           disabled={isPending}
         />
         {isPending && (
-          <div className="mt-4 text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-gray-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              インポート中...
+          <div className="mt-3 text-center">
+            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="animate-spin rounded-full h-3 w-3 border-b border-foreground"></div>
+              Processing...
             </div>
           </div>
         )}

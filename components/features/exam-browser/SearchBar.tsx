@@ -25,13 +25,12 @@ export function SearchBar() {
   }
 
   return (
-    <div className="relative">
-      <Input
-        placeholder="試験を検索..."
-        value={searchTerm}
-        onChange={(e) => handleSearch(e.target.value)}
-        disabled={isPending}
-      />
-    </div>
+    <Input
+      placeholder="Search exams..."
+      value={searchTerm}
+      onChange={(e) => handleSearch(e.target.value)}
+      disabled={isPending}
+      className="text-sm"
+    />
   )
 }
