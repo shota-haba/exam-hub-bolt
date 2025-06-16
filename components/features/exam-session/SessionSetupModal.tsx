@@ -17,10 +17,10 @@ interface SessionSetupModalProps {
 }
 
 const modeLabels = {
-  [SessionMode.Warmup]: 'New',
-  [SessionMode.Review]: 'Review',
-  [SessionMode.Repetition]: 'Repeat',
-  [SessionMode.Comprehensive]: 'All'
+  [SessionMode.Warmup]: '予習',
+  [SessionMode.Review]: '復習',
+  [SessionMode.Repetition]: '反復',
+  [SessionMode.Comprehensive]: '総合'
 }
 
 export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: SessionSetupModalProps) {
@@ -47,12 +47,12 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Session Configuration</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">セッション設定</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <div>
-            <Label className="text-sm font-medium">Mode</Label>
+            <Label className="text-sm font-medium">モード</Label>
             <RadioGroup 
               value={selectedMode} 
               onValueChange={(value) => {
@@ -79,7 +79,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                       <div className="flex justify-between items-center">
                         <span>{label}</span>
                         <span className="text-xs text-muted-foreground">
-                          {count} questions
+                          {count}問
                         </span>
                       </div>
                     </Label>
@@ -91,7 +91,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
           <div>
             <Label className="text-sm font-medium">
-              Questions: {questionCount[0]}
+              問題数: {questionCount[0]}
             </Label>
             <Slider
               value={questionCount}
@@ -110,7 +110,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
           <div>
             <Label className="text-sm font-medium">
-              Time per question: {timePerQuestion[0]}s
+              制限時間: {timePerQuestion[0]}秒/問
             </Label>
             <Slider
               value={timePerQuestion}
@@ -121,21 +121,21 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               className="mt-2"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>15s</span>
-              <span>120s</span>
+              <span>15秒</span>
+              <span>120秒</span>
             </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose} size="sm">
-              Cancel
+              キャンセル
             </Button>
             <Button 
               onClick={handleStart}
               disabled={isStartDisabled}
               size="sm"
             >
-              Start Session
+              開始
             </Button>
           </div>
         </div>

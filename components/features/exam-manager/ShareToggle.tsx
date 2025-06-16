@@ -8,9 +8,10 @@ import { updateExamSharedAction } from '@/actions/exam'
 interface ShareToggleProps {
   examId: string
   initialShared: boolean
+  onChange?: () => void
 }
 
-export function ShareToggle({ examId, initialShared }: ShareToggleProps) {
+export function ShareToggle({ examId, initialShared, onChange }: ShareToggleProps) {
   const [isShared, setIsShared] = useState(initialShared)
   const [isPending, startTransition] = useTransition()
 
@@ -22,6 +23,8 @@ export function ShareToggle({ examId, initialShared }: ShareToggleProps) {
       if (!result.success) {
         // エラー時は元に戻す
         setIsShared(!checked)
+      } else if (onChange) {
+        onChange()
       }
     })
   }
@@ -35,7 +38,7 @@ export function ShareToggle({ examId, initialShared }: ShareToggleProps) {
         disabled={isPending}
       />
       <Label htmlFor={`share-${examId}`} className="text-sm">
-        {isShared ? '公開中' : '非公開'}
+        {isShared ? '共有中' : '非公開'}
       </Label>
     </div>
   )

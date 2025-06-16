@@ -19,13 +19,13 @@ export function ExamImport() {
       
       if (result.success) {
         toast({
-          title: 'Import complete',
-          description: 'Exam data imported successfully',
+          title: 'インポート完了',
+          description: '試験データが正常にインポートされました',
         })
       } else {
         toast({
-          title: 'Import failed',
-          description: result.error || 'Failed to import exam data',
+          title: 'インポート失敗',
+          description: result.error || '試験データのインポートに失敗しました',
           variant: 'destructive',
         })
       }
@@ -35,9 +35,9 @@ export function ExamImport() {
   return (
     <Card className="border-dashed bg-muted/20 hover:bg-muted/30 transition-colors">
       <CardHeader>
-        <CardTitle className="text-sm font-medium">Import Exam Data</CardTitle>
+        <CardTitle className="text-sm font-medium">試験データインポート</CardTitle>
         <CardDescription className="text-xs">
-          Upload JSON format question sets
+          JSON形式の問題セットをアップロード
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -49,7 +49,7 @@ export function ExamImport() {
           <div className="mt-3 text-center">
             <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
               <div className="animate-spin rounded-full h-3 w-3 border-b border-foreground"></div>
-              Processing...
+              処理中...
             </div>
           </div>
         )}

@@ -8,12 +8,13 @@ import { toggleExamLikeAction } from '@/actions/exam'
 interface LikeButtonProps {
   examId: string
   initialLiked: boolean
-  likesCount: number
+  initialCount: number
+  onChange?: () => void
 }
 
-export function LikeButton({ examId, initialLiked, likesCount }: LikeButtonProps) {
+export function LikeButton({ examId, initialLiked, initialCount, onChange }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(initialLiked)
-  const [currentLikesCount, setCurrentLikesCount] = useState(likesCount)
+  const [currentLikesCount, setCurrentLikesCount] = useState(initialCount)
   const [isPending, startTransition] = useTransition()
 
   const handleToggleLike = () => {
@@ -27,6 +28,8 @@ export function LikeButton({ examId, initialLiked, likesCount }: LikeButtonProps
         // エラー時は元に戻す
         setIsLiked(!newLikedState)
         setCurrentLikesCount(prev => newLikedState ? prev - 1 : prev + 1)
+      } else if (onChange) {
+        onChange()
       }
     })
   }
