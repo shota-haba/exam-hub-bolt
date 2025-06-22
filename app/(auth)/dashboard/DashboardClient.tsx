@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import Link from 'next/link'
 import { useState } from 'react'
 import { SessionSetupModal } from '@/components/features/exam-session/SessionSetupModal'
 import { ExamModeStats } from '@/lib/types'
@@ -16,7 +15,12 @@ interface AnalyticsRow {
   repetitionCount: number
   dailySessions: number
   totalSessions: number
-  modeStats: ExamModeStats
+  modeStats: ExamModeStats & {
+    warmup: { count: number; attempts: number }
+    review: { count: number; attempts: number }
+    repetition: { count: number; attempts: number }
+    comprehensive: { count: number; attempts: number }
+  }
 }
 
 interface DashboardClientProps {
@@ -36,7 +40,12 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
     const exam = analytics.find(e => e.examId === examId)
     if (exam) {
       setSelectedExamId(examId)
-      setSelectedExamModeStats(exam.modeStats)
+      setSelectedExamModeStats({
+        warmup: { count: exam.modeStats.warmup.count, attempts: exam.modeStats.warmup.attempts },
+        review: { count: exam.modeStats.review.count, attempts: exam.modeStats.review.attempts },
+        repetition: { count: exam.modeStats.repetition.count, attempts: exam.modeStats.repetition.attempts },
+        comprehensive: { count: exam.modeStats.comprehensive.count, attempts: exam.modeStats.comprehensive.attempts }
+      })
     }
   }
 
@@ -52,39 +61,56 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
             <CardTitle>アナリティクス</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>試験タイトル</TableHead>
-                  <TableHead className="text-right w-20">予習</TableHead>
-                  <TableHead className="text-right w-20">復習</TableHead>
-                  <TableHead className="text-right w-20">反復</TableHead>
-                  <TableHead className="text-right w-20">日計</TableHead>
-                  <TableHead className="text-right w-20">累計</TableHead>
-                  <TableHead className="w-24"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analytics.map((row) => (
-                  <TableRow key={row.examId}>
-                    <TableCell className="font-medium">{row.examTitle}</TableCell>
-                    <TableCell className="text-right">{row.warmupCount}</TableCell>
-                    <TableCell className="text-right">{row.reviewCount}</TableCell>
-                    <TableCell className="text-right">{row.repetitionCount}</TableCell>
-                    <TableCell className="text-right">{row.dailySessions}</TableCell>
-                    <TableCell className="text-right">{row.totalSessions}</TableCell>
-                    <TableCell>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleStartSession(row.examId)}
-                      >
-                        セッション
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">試験タイトル</TableHead>
+                    <TableHead className="text-center w-16">予習</TableHead>
+                    <TableHead className="text-center w-16">復習</TableHead>
+                    <TableHead className="text-center w-16">反復</TableHead>
+                    <TableHead className="text-center w-16">日計</TableHead>
+                    <TableHead className="text-center w-16">累計</TableHead>
+                    <TableHead className="w-24"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {analytics.map((row) => (
+                    <TableRow key={row.examId}>
+                      <TableCell className="font-medium">{row.examTitle}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-sm">
+                          <div>{row.warmupCount}</div>
+                          <div className="text-xs text-muted-foreground">({row.modeStats.warmup.attempts}回)</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-sm">
+                          <div>{row.reviewCount}</div>
+                          <div className="text-xs text-muted-foreground">({row.modeStats.review.attempts}回)</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-sm">
+                          <div>{row.repetitionCount}</div>
+                          <div className="text-xs text-muted-foreground">({row.modeStats.repetition.attempts}回)</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">{row.dailySessions}</TableCell>
+                      <TableCell className="text-center">{row.totalSessions}</TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleStartSession(row.examId)}
+                        >
+                          セッション
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -92,9 +118,6 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="text-center space-y-4">
               <h3>試験データなし</h3>
-              <Button asChild>
-                <Link href="/exams">試験インポート</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>

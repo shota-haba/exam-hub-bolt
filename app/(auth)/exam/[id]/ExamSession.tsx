@@ -138,45 +138,47 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         <h1>結果</h1>
         
         <Card className="mt-8">
-          <CardContent className="pt-6">
+          <CardContent className="pt-8">
             <div className="grid grid-cols-3 gap-8 mb-8">
-              <div>
-                <p className="text-sm text-muted-foreground">正解数</p>
-                <p className="text-2xl font-bold">{results.correctCount}/{results.totalQuestions}</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-2">正解数</p>
+                <p className="text-3xl font-bold">{results.correctCount}/{results.totalQuestions}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">正答率</p>
-                <p className="text-2xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-2">正答率</p>
+                <p className="text-3xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">所要時間</p>
-                <p className="text-2xl font-bold">{Math.round(results.timeTaken)}秒</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-2">所要時間</p>
+                <p className="text-3xl font-bold">{Math.round(results.timeTaken)}秒</p>
               </div>
             </div>
             
-            <h2 className="mb-4">設問レビュー</h2>
+            <h2 className="mb-6">設問レビュー</h2>
             <div className="space-y-4">
               {results.questions.map((item, index) => (
-                <div key={index} className="p-4 border rounded">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
-                      <div className={`w-3 h-3 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
+                <div key={index} className="p-6 border rounded">
+                  <div className="flex items-start gap-4">
+                    <div className={`p-2 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
+                      <div className={`w-4 h-4 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{item.question.text}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                    <div className="flex-1 space-y-3">
+                      <p className="font-medium text-base">{item.question.text}</p>
+                      <p className="text-sm text-muted-foreground">
                         {item.selectedAnswer ? `回答: ${item.question.choices.find(c => c.identifier === item.selectedAnswer)?.text || '不明'}` : '未回答'}
                       </p>
                       {!item.isCorrect && (
-                        <p className="text-sm mt-1">
+                        <p className="text-sm">
                           正解: {item.question.choices.find(c => c.isCorrect)?.text || '不明'}
                         </p>
                       )}
                       {item.question.explanation && (
-                        <p className="text-sm border-t mt-2 pt-2 text-muted-foreground">
-                          <span className="font-medium">解説: </span>
-                          {item.question.explanation}
-                        </p>
+                        <div className="border-t pt-3">
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">解説: </span>
+                            {item.question.explanation}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -184,7 +186,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
               ))}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center pt-2 pb-6">
+          <CardFooter className="flex justify-center pt-6 pb-8">
             <Button asChild>
               <Link href="/dashboard">ダッシュボード</Link>
             </Button>
@@ -209,30 +211,31 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   
   return (
     <main className="page-container">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h2>{examSet.title}</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold">{examSet.title}</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             {currentQuestionIndex + 1} / {questions.length}設問
           </p>
         </div>
         {timeLimit > 0 && (
-          <div className="flex items-center">
-            <span className="font-bold">{timeLeft}秒</span>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">残り時間</p>
+            <p className="text-xl font-bold">{timeLeft}秒</p>
           </div>
         )}
       </div>
       
       <Progress 
         value={(currentQuestionIndex / questions.length) * 100} 
-        className="h-2 mb-6" 
+        className="h-2 mb-8" 
       />
       
       <Card>
-        <CardContent className="pt-6">
-          <h2 className="mb-6">{currentQuestion.text}</h2>
+        <CardContent className="pt-8">
+          <h2 className="text-xl font-semibold mb-8">{currentQuestion.text}</h2>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
@@ -243,28 +246,28 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
                 onClick={() => !isAnswered && handleAnswer(choice.identifier)}
               >
                 <div className="flex items-start w-full">
-                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border mr-3 ${
-                    selectedAnswer === choice.identifier ? 'border-foreground bg-foreground text-background' : 'border-primary text-primary'
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 mr-4 ${
+                    selectedAnswer === choice.identifier ? 'border-foreground bg-foreground text-background' : 'border-muted-foreground'
                   }`}>
-                    <span className="text-sm">{choice.identifier}</span>
+                    <span className="text-sm font-medium">{choice.identifier}</span>
                   </div>
-                  <div className="flex-1">{choice.text}</div>
+                  <div className="flex-1 text-base leading-relaxed">{choice.text}</div>
                 </div>
               </div>
             ))}
           </div>
           
           {isAnswered && currentQuestion.explanation && (
-            <div className="mt-6 p-4 border rounded bg-muted">
-              <h3 className="font-medium mb-1">解説</h3>
-              <p className="text-sm">{currentQuestion.explanation}</p>
+            <div className="mt-8 p-6 border rounded bg-muted">
+              <h3 className="font-medium mb-3">解説</h3>
+              <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="justify-end pt-2 pb-6">
+        <CardFooter className="justify-end pt-6 pb-8">
           {isAnswered && (
-            <Button onClick={handleNextQuestion}>
+            <Button onClick={handleNextQuestion} size="lg">
               {currentQuestionIndex < questions.length - 1 ? '次の設問' : '結果を見る'}
             </Button>
           )}

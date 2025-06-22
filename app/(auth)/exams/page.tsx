@@ -15,7 +15,7 @@ import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
 import { getUserExams, getExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
-import { deleteExamAction } from '@/lib/actions/exam'
+import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamButton'
 
 export default async function ExamsPage() {
   const supabase = await createClient()
@@ -37,7 +37,7 @@ export default async function ExamsPage() {
         <ExamImport />
         
         <div>
-          <h2 className="mb-4">試験一覧</h2>
+          <h2 className="mb-6">試験一覧</h2>
           
           <Suspense fallback={
             <div className="card-grid">
@@ -73,70 +73,55 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
   const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
-          <div className="space-y-1 flex-1 min-w-0">
-            <CardTitle className="text-sm font-medium truncate">
+          <div className="space-y-2 flex-1 min-w-0">
+            <CardTitle className="text-base font-medium truncate">
               {exam.title}
             </CardTitle>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-sm">
               {new Date(exam.created_at).toLocaleDateString()}
             </CardDescription>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreHorizontal className="h-3 w-3" />
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <form action={async () => {
-                  'use server'
-                  await deleteExamAction(exam.id)
-                }}>
-                  <button 
-                    type="submit"
-                    className="w-full text-left text-destructive"
-                    onClick={(e) => {
-                      if (!confirm('この試験を削除しますか？')) {
-                        e.preventDefault()
-                      }
-                    }}
-                  >
-                    削除
-                  </button>
-                </form>
+                <DeleteExamButton examId={exam.id} />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 flex-1">
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-sm">
             {questionCount}設問
           </Badge>
         </div>
         
-        <div className="grid grid-cols-4 gap-2 text-xs">
-          <div className="text-center p-2 bg-muted rounded">
-            <div className="font-medium">{modeStats.warmup.count}</div>
-            <div className="text-muted-foreground">予習</div>
+        <div className="grid grid-cols-4 gap-3">
+          <div className="text-center p-3 bg-muted rounded">
+            <div className="text-lg font-semibold">{modeStats.warmup.count}</div>
+            <div className="text-xs text-muted-foreground">予習</div>
           </div>
-          <div className="text-center p-2 bg-muted rounded">
-            <div className="font-medium">{modeStats.review.count}</div>
-            <div className="text-muted-foreground">復習</div>
+          <div className="text-center p-3 bg-muted rounded">
+            <div className="text-lg font-semibold">{modeStats.review.count}</div>
+            <div className="text-xs text-muted-foreground">復習</div>
           </div>
-          <div className="text-center p-2 bg-muted rounded">
-            <div className="font-medium">{modeStats.repetition.count}</div>
-            <div className="text-muted-foreground">反復</div>
+          <div className="text-center p-3 bg-muted rounded">
+            <div className="text-lg font-semibold">{modeStats.repetition.count}</div>
+            <div className="text-xs text-muted-foreground">反復</div>
           </div>
-          <div className="text-center p-2 bg-muted rounded">
-            <div className="font-medium">{modeStats.comprehensive.count}</div>
-            <div className="text-muted-foreground">総合</div>
+          <div className="text-center p-3 bg-muted rounded">
+            <div className="text-lg font-semibold">{modeStats.comprehensive.count}</div>
+            <div className="text-xs text-muted-foreground">総合</div>
           </div>
         </div>
 
@@ -144,7 +129,7 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
       </CardContent>
       
       <CardFooter className="pt-0">
-        <Button asChild className="w-full" size="sm">
+        <Button asChild className="w-full">
           <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
             セッション開始
           </Link>

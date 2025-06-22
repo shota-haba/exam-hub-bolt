@@ -35,8 +35,8 @@ export function ExamImport() {
   return (
     <Card className="border-dashed">
       <CardHeader>
-        <CardTitle className="text-sm font-medium">試験データインポート</CardTitle>
-        <CardDescription className="text-xs">
+        <CardTitle className="text-base font-medium">試験データインポート</CardTitle>
+        <CardDescription className="text-sm">
           JSON形式の試験データをアップロード
         </CardDescription>
       </CardHeader>
@@ -46,9 +46,9 @@ export function ExamImport() {
           disabled={isPending}
         />
         {isPending && (
-          <div className="mt-3 text-center">
-            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="animate-spin rounded-full h-3 w-3 border-b border-foreground"></div>
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-foreground"></div>
               処理中...
             </div>
           </div>

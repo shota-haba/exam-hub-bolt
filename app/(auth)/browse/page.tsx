@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
 import { ExamImport } from '@/components/features/exam-manager/ExamImport'
-import { getSharedExams } from '@/lib/supabase/db'
+import { getSharedExams, getUserExams } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
-import { importSharedExamAction } from '@/lib/actions/exam'
+import { ImportSharedExamButton } from '@/components/features/exam-browser/ImportSharedExamButton'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -26,10 +26,16 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   }
 
   const { search, sort } = await searchParams
-  const sharedExams = await getSharedExams(user.id, {
-    searchTerm: search,
-    sortBy: sort as 'newest' | 'likes'
-  })
+  const [sharedExams, userExams] = await Promise.all([
+    getSharedExams(user.id, {
+      searchTerm: search,
+      sortBy: sort as 'newest' | 'likes'
+    }),
+    getUserExams(user.id)
+  ])
+
+  // 自分が共有している試験を取得
+  const mySharedExams = userExams.filter(exam => exam.is_shared)
 
   return (
     <main className="page-container">
@@ -40,8 +46,19 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
       <div className="space-y-8">
         <ExamImport />
         
+        {mySharedExams.length > 0 && (
+          <div>
+            <h2 className="mb-6">共有中の試験</h2>
+            <div className="card-grid">
+              {mySharedExams.map((exam) => (
+                <MySharedExamCard key={exam.id} exam={exam} />
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div>
-          <h2 className="mb-4">共有試験</h2>
+          <h2 className="mb-6">共有試験</h2>
           
           <Suspense fallback={
             <div className="card-grid">
@@ -72,25 +89,63 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   )
 }
 
-function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+function MySharedExamCard({ exam }: { exam: ExamSet }) {
   const questionCount = exam.data?.questions?.length || 0
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="space-y-1">
-          <CardTitle className="text-sm font-medium">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <div className="space-y-2">
+          <CardTitle className="text-base font-medium">
             {exam.title}
           </CardTitle>
-          <CardDescription className="text-xs">
+          <CardDescription className="text-sm">
             {new Date(exam.created_at).toLocaleDateString()}
           </CardDescription>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4 flex-1">
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-sm">
+            {questionCount}設問
+          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{exam.likes_count}いいね</span>
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-0">
+        <Button asChild className="w-full">
+          <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
+            セッション
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+  const questionCount = exam.data?.questions?.length || 0
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <div className="space-y-2">
+          <CardTitle className="text-base font-medium">
+            {exam.title}
+          </CardTitle>
+          <CardDescription className="text-sm">
+            {new Date(exam.created_at).toLocaleDateString()}
+          </CardDescription>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4 flex-1">
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-sm">
             {questionCount}設問
           </Badge>
           <LikeButton 
@@ -102,15 +157,8 @@ function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
       </CardContent>
       
       <CardFooter className="pt-0 flex gap-2">
-        <form action={async () => {
-          'use server'
-          await importSharedExamAction(exam.id)
-        }} className="flex-1">
-          <Button type="submit" variant="outline" className="w-full" size="sm">
-            インポート
-          </Button>
-        </form>
-        <Button asChild className="flex-1" size="sm">
+        <ImportSharedExamButton examId={exam.id} />
+        <Button asChild className="flex-1">
           <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
             セッション
           </Link>
