@@ -32,7 +32,7 @@ export function FileDropzone({ onFileAccepted, disabled, className }: FileDropzo
       {...getRootProps()}
       className={cn(
         "border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer transition-colors",
-        isDragActive && "border-primary bg-muted/50",
+        isDragActive && "border-primary bg-primary/5",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}

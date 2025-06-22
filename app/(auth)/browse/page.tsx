@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
-import { getSharedExams, getUserExams } from '@/lib/supabase/db'
+import { SessionStartButton } from '@/components/shared/SessionStartButton'
+import { getSharedExams, getUserExams, getExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
 import { ImportSharedExamButton } from '@/components/features/exam-browser/ImportSharedExamButton'
@@ -47,7 +46,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             <h3 className="text-lg font-medium mb-4">共有中の試験</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {mySharedExams.map((exam) => (
-                <MySharedExamCard key={exam.id} exam={exam} />
+                <MySharedExamCard key={exam.id} exam={exam} userId={user.id} />
               ))}
             </div>
           </div>
@@ -86,8 +85,9 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   )
 }
 
-function MySharedExamCard({ exam }: { exam: ExamSet }) {
+async function MySharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
   const questionCount = exam.data?.questions?.length || 0
+  const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
     <Card className="h-full flex flex-col">
@@ -114,18 +114,22 @@ function MySharedExamCard({ exam }: { exam: ExamSet }) {
       </CardContent>
       
       <CardFooter className="pt-0">
-        <Button asChild className="w-full" size="sm">
-          <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
-            セッション開始
-          </Link>
-        </Button>
+        <SessionStartButton 
+          examId={exam.id} 
+          modeStats={modeStats}
+          className="w-full" 
+          size="sm"
+        >
+          セッション開始
+        </SessionStartButton>
       </CardFooter>
     </Card>
   )
 }
 
-function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+async function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
   const questionCount = exam.data?.questions?.length || 0
+  const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
     <Card className="h-full flex flex-col">
@@ -155,11 +159,14 @@ function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
       
       <CardFooter className="pt-0 flex gap-2">
         <ImportSharedExamButton examId={exam.id} />
-        <Button asChild className="flex-1" size="sm">
-          <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
-            セッション開始
-          </Link>
-        </Button>
+        <SessionStartButton 
+          examId={exam.id} 
+          modeStats={modeStats}
+          className="flex-1" 
+          size="sm"
+        >
+          セッション開始
+        </SessionStartButton>
       </CardFooter>
     </Card>
   )

@@ -28,11 +28,12 @@ export default async function ExamPage({ params, searchParams }: ExamPageProps) 
   const questionCount = parseInt(count || '10')
   const timeLimit = parseInt(time || '30')
 
-  // 試験セットを取得
+  // 試験セットを取得（共有試験も含む）
   const { data: examSet, error: examError } = await supabase
     .from('exam_sets')
     .select('*')
     .eq('id', examId)
+    .or(`user_id.eq.${user.id},is_shared.eq.true`)
     .single()
 
   if (examError || !examSet) {
@@ -44,17 +45,19 @@ export default async function ExamPage({ params, searchParams }: ExamPageProps) 
 
   if (questions.length === 0) {
     return (
-      <div className="container py-8 px-4 flex flex-col items-center">
-        <h1 className="text-2xl font-bold mb-4">問題がありません</h1>
-        <p className="text-muted-foreground mb-6 text-center">
-          選択した学習モードに該当する問題が見つかりませんでした。
-        </p>
-        <a 
-          href="/dashboard" 
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-        >
-          ダッシュボードに戻る
-        </a>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex flex-col items-center justify-center py-16">
+          <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
+          <p className="text-muted-foreground mb-6 text-center">
+            選択した学習モードに該当する設問が見つかりませんでした。
+          </p>
+          <a 
+            href="/exams" 
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            Session
+          </a>
+        </div>
       </div>
     )
   }

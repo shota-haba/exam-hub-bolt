@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Download } from 'lucide-react'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -12,10 +12,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
+import { SessionStartButton } from '@/components/shared/SessionStartButton'
 import { getUserExams, getExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
 import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamButton'
+import { ExportExamButton } from '@/components/features/exam-manager/ExportExamButton'
 
 export default async function ExamsPage() {
   const supabase = await createClient()
@@ -96,6 +98,9 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
                 <Link href={`/exams/${exam.id}/edit`}>編集</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <ExportExamButton exam={exam} />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <DeleteExamButton examId={exam.id} />
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -133,11 +138,14 @@ async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: str
       </CardContent>
       
       <CardFooter className="pt-0">
-        <Button asChild className="w-full" size="sm">
-          <Link href={`/exam/${exam.id}?mode=comprehensive&count=10&time=30`}>
-            セッション開始
-          </Link>
-        </Button>
+        <SessionStartButton 
+          examId={exam.id} 
+          modeStats={modeStats}
+          className="w-full" 
+          size="sm"
+        >
+          セッション開始
+        </SessionStartButton>
       </CardFooter>
     </Card>
   )
