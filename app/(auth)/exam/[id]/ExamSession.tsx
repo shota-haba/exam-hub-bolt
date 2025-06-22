@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useAuth } from '@/components/shared/AuthProvider'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
     timeLimit
   })
 
+  // 結果が表示されている場合の早期リターン（最優先）
   if (results) {
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -118,7 +119,8 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
     )
   }
   
-  if (!currentQuestion) {
+  // 問題が存在しない場合（初期問題リストが空の場合のみ）
+  if (!currentQuestion && initialQuestionsRef.current.length === 0) {
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex flex-col items-center justify-center py-16">
@@ -163,10 +165,10 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       
       <Card>
         <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-6">{currentQuestion.text}</h3>
+          <h3 className="text-lg font-semibold mb-6">{currentQuestion?.text}</h3>
           
           <div className="space-y-3">
-            {currentQuestion.choices.map((choice) => (
+            {currentQuestion?.choices.map((choice) => (
               <div 
                 key={choice.id}
                 className={`relative flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -189,7 +191,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
             ))}
           </div>
           
-          {isAnswered && currentQuestion.explanation && (
+          {isAnswered && currentQuestion?.explanation && (
             <div className="mt-6 p-4 border rounded-lg bg-muted">
               <h4 className="font-medium text-sm mb-2">解説</h4>
               <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>

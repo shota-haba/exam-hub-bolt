@@ -1,4 +1,7 @@
+'use client'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { SessionMode, Question, QuestionResult, ExamSet } from '@/lib/types'
 import { saveSessionResultAction } from '@/lib/actions/exam'
 
@@ -32,6 +35,7 @@ type SessionResults = {
 /**
  * 試験セッションの状態管理とビジネスロジックを担当するカスタムフック
  * タイマー管理、回答処理、結果計算などを一元化
+ * sessionStorageによる結果永続化でページ再評価に対応
  */
 export function useExamSession({ 
   examSet, 
@@ -39,13 +43,35 @@ export function useExamSession({
   mode, 
   timeLimit 
 }: UseExamSessionProps): UseExamSessionReturn {
+  const searchParams = useSearchParams()
+  
+  // セッション固有のキーを生成（URL パラメータを含む）
+  const sessionKey = `examSession-${examSet.id}-${searchParams.toString()}`
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
   const [timeLeft, setTimeLeft] = useState(timeLimit)
-  const [results, setResults] = useState<SessionResults | null>(null)
   const [sessionStartTime] = useState(new Date())
   const progressRef = useRef<HTMLDivElement>(null)
+
+  // 結果の初期化：sessionStorageから復元を試行
+  const [results, setResults] = useState<SessionResults | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedResults = sessionStorage.getItem(sessionKey)
+        if (savedResults) {
+          const parsedResults = JSON.parse(savedResults)
+          console.log('セッション結果をsessionStorageから復元:', parsedResults)
+          return parsedResults
+        }
+      } catch (error) {
+        console.error('sessionStorageからの結果復元に失敗:', error)
+        sessionStorage.removeItem(sessionKey) // 破損したデータを削除
+      }
+    }
+    return null
+  })
   
   const [sessionQuestions, setSessionQuestions] = useState<QuestionResult[]>(
     questions.map(q => ({
@@ -120,6 +146,48 @@ export function useExamSession({
       return updated
     })
   }, [isAnswered, currentQuestion, timeLimit, timeLeft, currentQuestionIndex])
+
+  const finishSession = useCallback(() => {
+    // 最新のsessionQuestionsを使用して結果を計算
+    setSessionQuestions(currentSessionQuestions => {
+      const correctCount = currentSessionQuestions.filter(q => q.isCorrect).length
+      const totalTimeSpent = currentSessionQuestions.reduce((sum, q) => sum + q.timeSpent, 0)
+      
+      const sessionResults = {
+        correctCount,
+        totalQuestions: questions.length,
+        timeTaken: totalTimeSpent,
+        questions: currentSessionQuestions
+      }
+      
+      // 結果をstateとsessionStorageの両方に保存
+      setResults(sessionResults)
+      
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(sessionKey, JSON.stringify(sessionResults))
+          console.log('セッション結果をsessionStorageに保存:', sessionResults)
+        } catch (error) {
+          console.error('sessionStorageへの保存に失敗:', error)
+        }
+      }
+      
+      // セッション結果を非同期で保存
+      saveSessionResultAction({
+        examId: examSet.id,
+        mode,
+        startTime: sessionStartTime,
+        endTime: new Date(),
+        score: correctCount,
+        totalQuestions: questions.length,
+        questionsData: currentSessionQuestions
+      }).catch(error => {
+        console.error('セッション結果の保存に失敗:', error)
+      })
+      
+      return currentSessionQuestions
+    })
+  }, [questions.length, examSet.id, mode, sessionStartTime, sessionKey])
   
   const handleNextQuestion = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -133,39 +201,17 @@ export function useExamSession({
         finishSession()
       }, 0)
     }
-  }, [currentQuestionIndex, questions.length])
-  
-  const finishSession = useCallback(async () => {
-    // 最新のsessionQuestionsを使用して結果を計算
-    setSessionQuestions(currentSessionQuestions => {
-      const correctCount = currentSessionQuestions.filter(q => q.isCorrect).length
-      const totalTimeSpent = currentSessionQuestions.reduce((sum, q) => sum + q.timeSpent, 0)
-      
-      const sessionResults = {
-        correctCount,
-        totalQuestions: questions.length,
-        timeTaken: totalTimeSpent,
-        questions: currentSessionQuestions
+  }, [currentQuestionIndex, questions.length, finishSession])
+
+  // コンポーネントのアンマウント時にsessionStorageをクリーンアップ
+  useEffect(() => {
+    return () => {
+      // 結果が表示されていない場合のみクリーンアップ
+      if (!results && typeof window !== 'undefined') {
+        sessionStorage.removeItem(sessionKey)
       }
-      
-      setResults(sessionResults)
-      
-      // セッション結果を非同期で保存
-      saveSessionResultAction({
-        examId: examSet.id,
-        mode,
-        startTime: sessionStartTime,
-        endTime: new Date(),
-        score: correctCount,
-        totalQuestions: questions.length,
-        questionsData: currentSessionQuestions
-      }).catch(error => {
-        console.error('Failed to save session result:', error)
-      })
-      
-      return currentSessionQuestions
-    })
-  }, [questions.length, examSet.id, mode, sessionStartTime])
+    }
+  }, [sessionKey, results])
 
   return {
     currentQuestionIndex,

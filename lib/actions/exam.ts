@@ -57,7 +57,6 @@ export async function updateExamAction(examId: string, data: { title: string; da
       return { success: false, error: '認証が必要です' }
     }
 
-    // updated_atカラムを除外して更新
     const { error } = await supabase
       .from('exam_sets')
       .update({
@@ -201,7 +200,8 @@ export async function saveSessionResultAction(sessionData: SessionSaveData) {
       }
     }
     
-    revalidatePath('/dashboard')
+    // セッション完了後のrevalidatePathを削除（結果画面の安定性向上）
+    // revalidatePath('/dashboard') // この行をコメントアウト
     return { success: true }
   } catch (error) {
     console.error('Save session error:', error)
