@@ -1,9 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { useState } from 'react'
 import { SessionSetupModal } from '@/components/features/exam-session/SessionSetupModal'
 import { ExamModeStats } from '@/lib/types'
 
@@ -35,6 +35,16 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
     repetition: { count: 0, attempts: 0 },
     comprehensive: { count: 0, attempts: 0 }
   })
+  const [sessionTime, setSessionTime] = useState(0)
+
+  // リアルタイムタイマー
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSessionTime(prev => prev + 1)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
 
   const handleStartSession = (examId: string) => {
     const exam = analytics.find(e => e.examId === examId)
@@ -49,79 +59,106 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
     }
   }
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
   return (
-    <div className="page-container">
+    <div className="container">
       <div className="page-header">
-        <h1>ダッシュボード</h1>
+        <div>
+          <h1 className="page-title">ダッシュボード</h1>
+          <p className="page-description">学習進捗の分析</p>
+        </div>
       </div>
 
-      {analytics.length > 0 ? (
+      <div className="space-y-8">
+        {/* リアルタイムタイマー */}
         <Card>
           <CardHeader>
-            <CardTitle>アナリティクス</CardTitle>
+            <CardTitle>滞在時間</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">試験タイトル</TableHead>
-                    <TableHead className="text-center w-16">予習</TableHead>
-                    <TableHead className="text-center w-16">復習</TableHead>
-                    <TableHead className="text-center w-16">反復</TableHead>
-                    <TableHead className="text-center w-16">日計</TableHead>
-                    <TableHead className="text-center w-16">累計</TableHead>
-                    <TableHead className="w-24"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analytics.map((row) => (
-                    <TableRow key={row.examId}>
-                      <TableCell className="font-medium">{row.examTitle}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-sm">
-                          <div>{row.warmupCount}</div>
-                          <div className="text-xs text-muted-foreground">({row.modeStats.warmup.attempts}回)</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-sm">
-                          <div>{row.reviewCount}</div>
-                          <div className="text-xs text-muted-foreground">({row.modeStats.review.attempts}回)</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-sm">
-                          <div>{row.repetitionCount}</div>
-                          <div className="text-xs text-muted-foreground">({row.modeStats.repetition.attempts}回)</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">{row.dailySessions}</TableCell>
-                      <TableCell className="text-center">{row.totalSessions}</TableCell>
-                      <TableCell>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleStartSession(row.examId)}
-                        >
-                          セッション
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="text-4xl font-bold tabular-nums">
+              {formatTime(sessionTime)}
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="text-center space-y-4">
-              <h3>試験データなし</h3>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
+        {/* アナリティクステーブル */}
+        {analytics.length > 0 ? (
+          <div className="grid gap-6">
+            {analytics.map((exam) => (
+              <Card key={exam.examId}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">{exam.examTitle}</CardTitle>
+                    <Button onClick={() => handleStartSession(exam.examId)}>
+                      学習開始
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{exam.warmupCount}</div>
+                      <div className="text-sm text-muted-foreground">予習</div>
+                      <div className="text-xs text-muted-foreground">
+                        日計: {exam.modeStats.warmup.attempts}回
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        累計: {exam.modeStats.warmup.attempts}回
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{exam.reviewCount}</div>
+                      <div className="text-sm text-muted-foreground">復習</div>
+                      <div className="text-xs text-muted-foreground">
+                        日計: {exam.modeStats.review.attempts}回
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        累計: {exam.modeStats.review.attempts}回
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{exam.repetitionCount}</div>
+                      <div className="text-sm text-muted-foreground">反復</div>
+                      <div className="text-xs text-muted-foreground">
+                        日計: {exam.modeStats.repetition.attempts}回
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        累計: {exam.modeStats.repetition.attempts}回
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{exam.modeStats.comprehensive.count}</div>
+                      <div className="text-sm text-muted-foreground">総合</div>
+                      <div className="text-xs text-muted-foreground">
+                        日計: {exam.modeStats.comprehensive.attempts}回
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        累計: {exam.modeStats.comprehensive.attempts}回
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="text-center space-y-4">
+                <h3 className="text-lg font-semibold">試験データなし</h3>
+                <p className="text-muted-foreground">試験管理から試験をインポートしてください</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {selectedExamId && (
         <SessionSetupModal

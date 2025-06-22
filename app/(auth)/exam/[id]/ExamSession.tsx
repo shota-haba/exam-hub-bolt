@@ -134,50 +134,63 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   
   if (results) {
     return (
-      <main className="page-container">
-        <h1>結果</h1>
+      <div className="container">
+        <div className="page-header">
+          <h1 className="page-title">結果</h1>
+        </div>
         
-        <Card className="mt-8">
+        <Card>
           <CardContent className="pt-8">
             <div className="grid grid-cols-3 gap-8 mb-8">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">正解数</p>
-                <p className="text-3xl font-bold">{results.correctCount}/{results.totalQuestions}</p>
+                <div className="text-3xl font-bold">{results.correctCount}/{results.totalQuestions}</div>
+                <p className="text-sm text-muted-foreground mt-2">正解数</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">正答率</p>
-                <p className="text-3xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</p>
+                <div className="text-3xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</div>
+                <p className="text-sm text-muted-foreground mt-2">正答率</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">所要時間</p>
-                <p className="text-3xl font-bold">{Math.round(results.timeTaken)}秒</p>
+                <div className="text-3xl font-bold">{Math.round(results.timeTaken)}秒</div>
+                <p className="text-sm text-muted-foreground mt-2">所要時間</p>
               </div>
             </div>
             
-            <h2 className="mb-6">設問レビュー</h2>
-            <div className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight mb-6">設問レビュー</h2>
+            <div className="space-y-6">
               {results.questions.map((item, index) => (
-                <div key={index} className="p-6 border rounded">
+                <div key={index} className="p-6 border rounded-lg">
                   <div className="flex items-start gap-4">
                     <div className={`p-2 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
                       <div className={`w-4 h-4 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
                     </div>
-                    <div className="flex-1 space-y-3">
-                      <p className="font-medium text-base">{item.question.text}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.selectedAnswer ? `回答: ${item.question.choices.find(c => c.identifier === item.selectedAnswer)?.text || '不明'}` : '未回答'}
-                      </p>
-                      {!item.isCorrect && (
-                        <p className="text-sm">
-                          正解: {item.question.choices.find(c => c.isCorrect)?.text || '不明'}
-                        </p>
-                      )}
+                    <div className="flex-1 space-y-4">
+                      <p className="font-semibold text-lg">{item.question.text}</p>
+                      
+                      <div className="space-y-2">
+                        {item.question.choices.map((choice) => (
+                          <div 
+                            key={choice.id}
+                            className={`p-3 rounded border ${
+                              choice.isCorrect ? 'border-foreground bg-muted' :
+                              choice.identifier === item.selectedAnswer && !choice.isCorrect ? 'border-destructive bg-destructive/5' :
+                              'border-border'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium">{choice.identifier}</span>
+                              <span>{choice.text}</span>
+                              {choice.isCorrect && <span className="text-sm text-muted-foreground">(正解)</span>}
+                              {choice.identifier === item.selectedAnswer && !choice.isCorrect && <span className="text-sm text-destructive">(選択)</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
                       {item.question.explanation && (
-                        <div className="border-t pt-3">
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">解説: </span>
-                            {item.question.explanation}
-                          </p>
+                        <div className="border-t pt-4">
+                          <p className="font-medium mb-2">解説</p>
+                          <p className="text-muted-foreground">{item.question.explanation}</p>
                         </div>
                       )}
                     </div>
@@ -186,23 +199,24 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
               ))}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center pt-6 pb-8">
+          <CardFooter className="flex justify-center pt-8">
             <Button asChild>
               <Link href="/dashboard">ダッシュボード</Link>
             </Button>
           </CardFooter>
         </Card>
-      </main>
+      </div>
     )
   }
   
   if (!currentQuestion) {
     return (
-      <div className="page-container">
-        <div className="flex flex-col items-center py-16">
-          <p className="mb-4">設問が見つかりませんでした</p>
+      <div className="container">
+        <div className="flex flex-col items-center justify-center py-16">
+          <h1 className="text-2xl font-bold mb-4">学習モードに設問がありません</h1>
+          <p className="text-muted-foreground mb-6">選択した学習モードに該当する設問が見つかりませんでした</p>
           <Button asChild>
-            <Link href="/exams">試験一覧に戻る</Link>
+            <Link href="/exams">試験管理に戻る</Link>
           </Button>
         </div>
       </div>
@@ -210,24 +224,24 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   }
   
   return (
-    <main className="page-container">
+    <div className="container">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-xl font-semibold">{examSet.title}</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold">{examSet.title}</h1>
+          <p className="text-muted-foreground mt-1">
             {currentQuestionIndex + 1} / {questions.length}設問
           </p>
         </div>
         {timeLimit > 0 && (
           <div className="text-right">
+            <div className="text-2xl font-bold">{timeLeft}秒</div>
             <p className="text-sm text-muted-foreground">残り時間</p>
-            <p className="text-xl font-bold">{timeLeft}秒</p>
           </div>
         )}
       </div>
       
       <Progress 
-        value={(currentQuestionIndex / questions.length) * 100} 
+        value={timeLimit > 0 ? ((timeLimit - timeLeft) / timeLimit) * 100 : (currentQuestionIndex / questions.length) * 100} 
         className="h-2 mb-8" 
       />
       
@@ -239,9 +253,11 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
-                className={`choice-option ${
-                  isAnswered && choice.isCorrect ? 'correct' : 
-                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'incorrect' : ''
+                className={`relative flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
+                  isAnswered && choice.isCorrect ? 'border-foreground bg-muted' : 
+                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'border-destructive bg-destructive/5' : 
+                  selectedAnswer === choice.identifier ? 'border-foreground bg-muted' :
+                  'hover:bg-muted/50'
                 }`}
                 onClick={() => !isAnswered && handleAnswer(choice.identifier)}
               >
@@ -258,14 +274,14 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
           </div>
           
           {isAnswered && currentQuestion.explanation && (
-            <div className="mt-8 p-6 border rounded bg-muted">
-              <h3 className="font-medium mb-3">解説</h3>
+            <div className="mt-8 p-6 border rounded-lg bg-muted">
+              <h3 className="font-semibold mb-3">解説</h3>
               <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="justify-end pt-6 pb-8">
+        <CardFooter className="justify-end pt-6">
           {isAnswered && (
             <Button onClick={handleNextQuestion} size="lg">
               {currentQuestionIndex < questions.length - 1 ? '次の設問' : '結果を見る'}
@@ -273,6 +289,6 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
           )}
         </CardFooter>
       </Card>
-    </main>
+    </div>
   )
 }
