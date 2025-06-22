@@ -19,7 +19,7 @@ interface UseExamSessionReturn {
   currentQuestion: Question | undefined
   handleAnswer: (answerId: string | null) => void
   handleNextQuestion: () => void
-  finishSession: () => Promise<void>
+  progressRef: React.RefObject<HTMLDivElement>
 }
 
 type SessionResults = {
@@ -108,6 +108,7 @@ export function useExamSession({
     setSelectedAnswer(answerId)
     setIsAnswered(true)
     
+    // 重要: sessionQuestionsの更新を同期的に処理
     setSessionQuestions(prev => {
       const updated = [...prev]
       updated[currentQuestionIndex] = {
@@ -126,33 +127,45 @@ export function useExamSession({
       setSelectedAnswer(null)
       setIsAnswered(false)
     } else {
-      finishSession()
+      // 最後の問題の場合、finishSessionを非同期で呼び出し
+      // sessionQuestionsの更新が確実に反映されるようにする
+      setTimeout(() => {
+        finishSession()
+      }, 0)
     }
   }, [currentQuestionIndex, questions.length])
   
   const finishSession = useCallback(async () => {
-    const correctCount = sessionQuestions.filter(q => q.isCorrect).length
-    const totalTimeSpent = sessionQuestions.reduce((sum, q) => sum + q.timeSpent, 0)
-    
-    const sessionResults = {
-      correctCount,
-      totalQuestions: questions.length,
-      timeTaken: totalTimeSpent,
-      questions: sessionQuestions
-    }
-    
-    setResults(sessionResults)
-    
-    await saveSessionResultAction({
-      examId: examSet.id,
-      mode,
-      startTime: sessionStartTime,
-      endTime: new Date(),
-      score: correctCount,
-      totalQuestions: questions.length,
-      questionsData: sessionQuestions
+    // 最新のsessionQuestionsを使用して結果を計算
+    setSessionQuestions(currentSessionQuestions => {
+      const correctCount = currentSessionQuestions.filter(q => q.isCorrect).length
+      const totalTimeSpent = currentSessionQuestions.reduce((sum, q) => sum + q.timeSpent, 0)
+      
+      const sessionResults = {
+        correctCount,
+        totalQuestions: questions.length,
+        timeTaken: totalTimeSpent,
+        questions: currentSessionQuestions
+      }
+      
+      setResults(sessionResults)
+      
+      // セッション結果を非同期で保存
+      saveSessionResultAction({
+        examId: examSet.id,
+        mode,
+        startTime: sessionStartTime,
+        endTime: new Date(),
+        score: correctCount,
+        totalQuestions: questions.length,
+        questionsData: currentSessionQuestions
+      }).catch(error => {
+        console.error('Failed to save session result:', error)
+      })
+      
+      return currentSessionQuestions
     })
-  }, [sessionQuestions, questions.length, examSet.id, mode, sessionStartTime])
+  }, [questions.length, examSet.id, mode, sessionStartTime])
 
   return {
     currentQuestionIndex,
@@ -164,7 +177,6 @@ export function useExamSession({
     currentQuestion,
     handleAnswer,
     handleNextQuestion,
-    finishSession,
     progressRef
   }
 }

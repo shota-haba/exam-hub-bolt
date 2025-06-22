@@ -1,6 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import { useRef } from 'react'
 import { useAuth } from '@/components/shared/AuthProvider'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   const { user } = useAuth()
   const searchParams = useSearchParams()
   
+  // セッション開始時の問題リストをuseRefで保持（再レンダリング対策）
+  const initialQuestionsRef = useRef(initialQuestions)
+  
   const mode = searchParams.get('mode') as SessionMode || SessionMode.Warmup
   const timeLimit = parseInt(searchParams.get('time') || '30')
   
@@ -32,7 +36,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
     progressRef
   } = useExamSession({
     examSet,
-    questions: initialQuestions,
+    questions: initialQuestionsRef.current, // refの値を使用
     mode,
     timeLimit
   })
@@ -136,7 +140,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         <div>
           <h2 className="text-2xl font-bold">{examSet.title}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {currentQuestionIndex + 1} / {initialQuestions.length}設問
+            {currentQuestionIndex + 1} / {initialQuestionsRef.current.length}設問
           </p>
         </div>
         {timeLimit > 0 && (
@@ -153,7 +157,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       >
         <div 
           className="h-full bg-primary transition-all duration-75 ease-linear"
-          style={{ width: timeLimit > 0 ? 'var(--progress, 0%)' : `${((currentQuestionIndex + 1) / initialQuestions.length) * 100}%` }}
+          style={{ width: timeLimit > 0 ? 'var(--progress, 0%)' : `${((currentQuestionIndex + 1) / initialQuestionsRef.current.length) * 100}%` }}
         />
       </div>
       
@@ -196,7 +200,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         <CardFooter className="justify-end pt-4">
           {isAnswered && (
             <Button onClick={handleNextQuestion}>
-              {currentQuestionIndex < initialQuestions.length - 1 ? '次の設問' : '結果を見る'}
+              {currentQuestionIndex < initialQuestionsRef.current.length - 1 ? '次の設問' : '結果を見る'}
             </Button>
           )}
         </CardFooter>

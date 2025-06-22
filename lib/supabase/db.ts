@@ -1,5 +1,5 @@
 import { createClient } from './server'
-import { ExamSet, DashboardStats, SharedExamsOptions, UserProgress, SessionResult, SessionMode, Question, ExamModeStats } from '@/lib/types'
+import { ExamSet, DashboardStats, SharedExamsOptions, UserProgress, SessionResult, SessionMode, Question, ExamModeStats, ExtendedExamModeStats } from '@/lib/types'
 
 /**
  * DB操作サービス層 - 全DBクエリを集約
@@ -150,7 +150,7 @@ export async function getQuestionsForSession(
 }
 
 /**
- * 複数試験のモード別統計を一括取得（N+1問題解決）
+ * 複数試験のモード別統計を一括取得（N+1問題解決）- RPCを活用
  */
 export async function getBulkExamStatsByMode(examIds: string[], userId?: string): Promise<Map<string, ExamModeStats>> {
   if (examIds.length === 0) return new Map()
@@ -158,49 +158,25 @@ export async function getBulkExamStatsByMode(examIds: string[], userId?: string)
   const supabase = await createClient()
   const targetUserId = userId || await getCurrentUserId()
   
-  // 全試験の問題データを一括取得
-  const { data: examSets } = await supabase
-    .from('exam_sets')
-    .select('id, data')
-    .in('id', examIds)
+  // RPCを使用して効率的にデータを取得
+  const { data: rpcData, error } = await supabase.rpc('get_exam_mode_stats_bulk', {
+    p_exam_ids: examIds,
+    p_user_id: targetUserId
+  })
   
-  // 全試験の進捗データを一括取得
-  const { data: progressData } = await supabase
-    .from('user_progress')
-    .select('exam_set_id, question_id, last_result')
-    .eq('user_id', targetUserId)
-    .in('exam_set_id', examIds)
-  
-  // 全試験のセッションデータを一括取得
-  const { data: sessionData } = await supabase
-    .from('session_results')
-    .select('exam_set_id, session_mode')
-    .eq('user_id', targetUserId)
-    .in('exam_set_id', examIds)
+  if (error) {
+    console.error('Error fetching bulk exam stats via RPC:', error)
+    return new Map()
+  }
   
   const statsMap = new Map<string, ExamModeStats>()
   
-  for (const examSet of examSets || []) {
-    const allQuestions = examSet.data?.questions || []
-    const examProgress = (progressData || []).filter(p => p.exam_set_id === examSet.id)
-    const examSessions = (sessionData || []).filter(s => s.exam_set_id === examSet.id)
-    
-    const progressMap = new Map(examProgress.map(p => [p.question_id, p.last_result]))
-    
-    const sessionCounts = examSessions.reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
-    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
-    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
-    
-    statsMap.set(examSet.id, {
-      warmup: { count: warmupCount, attempts: sessionCounts.warmup || 0 },
-      review: { count: reviewCount, attempts: sessionCounts.review || 0 },
-      repetition: { count: repetitionCount, attempts: sessionCounts.repetition || 0 },
-      comprehensive: { count: allQuestions.length, attempts: sessionCounts.comprehensive || 0 }
+  for (const row of rpcData || []) {
+    statsMap.set(row.exam_id, {
+      warmup: { count: row.warmup_count, attempts: row.warmup_attempts },
+      review: { count: row.review_count, attempts: row.review_attempts },
+      repetition: { count: row.repetition_count, attempts: row.repetition_attempts },
+      comprehensive: { count: row.comprehensive_count, attempts: row.comprehensive_attempts }
     })
   }
   
@@ -222,102 +198,58 @@ export async function getExamStatsByMode(examId: string, userId?: string): Promi
 }
 
 /**
- * アナリティクスデータを取得（ダッシュボード用）
+ * アナリティクスデータを取得（ダッシュボード用）- RPCを利用して最適化
  */
 export async function getAnalyticsData(userId?: string) {
   const supabase = await createClient()
   const targetUserId = userId || await getCurrentUserId()
-  
-  const { data: exams } = await supabase
-    .from('exam_sets')
-    .select('id, title, data')
-    .eq('user_id', targetUserId)
-    .order('created_at', { ascending: false })
-  
-  if (!exams) return []
-  
-  const examIds = exams.map(e => e.id)
-  
-  // 全試験の進捗データを一括取得
-  const { data: progressData } = await supabase
-    .from('user_progress')
-    .select('exam_set_id, question_id, last_result')
-    .eq('user_id', targetUserId)
-    .in('exam_set_id', examIds)
-  
-  // 全試験のセッションデータを一括取得
-  const { data: sessionData } = await supabase
-    .from('session_results')
-    .select('exam_set_id, session_mode, created_at')
-    .eq('user_id', targetUserId)
-    .in('exam_set_id', examIds)
-  
-  // タイムゾーンに依存しない堅牢な日付比較
-  const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString()
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString()
-  
-  const analyticsData = []
-  
-  for (const exam of exams) {
-    const allQuestions = exam.data?.questions || []
-    const examProgress = (progressData || []).filter(p => p.exam_set_id === exam.id)
-    const examSessions = (sessionData || []).filter(s => s.exam_set_id === exam.id)
-    
-    const progressMap = new Map(examProgress.map(p => [p.question_id, p.last_result]))
-    
-    // 今日のセッションを正確にフィルタリング
-    const todaySessions = examSessions.filter(session => {
-      const sessionDate = new Date(session.created_at).toISOString()
-      return sessionDate >= todayStart && sessionDate <= todayEnd
-    })
-    
-    const todaySessionCounts = todaySessions.reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const totalSessionCounts = examSessions.reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
-    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
-    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
-    
-    analyticsData.push({
-      examId: exam.id,
-      examTitle: exam.title,
-      warmupCount,
-      reviewCount,
-      repetitionCount,
-      dailySessions: todaySessions.length,
-      totalSessions: examSessions.length,
-      modeStats: {
-        warmup: { 
-          count: warmupCount, 
-          attempts: totalSessionCounts.warmup || 0,
-          dailyAttempts: todaySessionCounts.warmup || 0
-        },
-        review: { 
-          count: reviewCount, 
-          attempts: totalSessionCounts.review || 0,
-          dailyAttempts: todaySessionCounts.review || 0
-        },
-        repetition: { 
-          count: repetitionCount, 
-          attempts: totalSessionCounts.repetition || 0,
-          dailyAttempts: todaySessionCounts.repetition || 0
-        },
-        comprehensive: { 
-          count: allQuestions.length, 
-          attempts: totalSessionCounts.comprehensive || 0,
-          dailyAttempts: todaySessionCounts.comprehensive || 0
-        }
-      }
-    })
+
+  // 既存のRPC 'get_user_analytics' を呼び出す
+  const { data: rpcData, error } = await supabase.rpc('get_user_analytics', {
+    p_user_id: targetUserId,
+  })
+
+  if (error) {
+    console.error('Error fetching user analytics via RPC:', error)
+    return []
   }
+
+  if (!rpcData) {
+    return []
+  }
+
+  // RPCからのフラットなデータを、クライアントが期待するネストされた形式にマッピングする
+  const analyticsData = rpcData.map((row: any) => ({
+    examId: row.exam_id,
+    examTitle: row.exam_title,
+    warmupCount: row.warmup_count,
+    reviewCount: row.review_count,
+    repetitionCount: row.repetition_count,
+    dailySessions: row.daily_sessions,
+    totalSessions: row.total_sessions,
+    modeStats: {
+      warmup: { 
+        count: row.warmup_count, 
+        attempts: row.warmup_attempts,
+        dailyAttempts: row.warmup_daily_attempts
+      },
+      review: { 
+        count: row.review_count, 
+        attempts: row.review_attempts,
+        dailyAttempts: row.review_daily_attempts
+      },
+      repetition: { 
+        count: row.repetition_count, 
+        attempts: row.repetition_attempts,
+        dailyAttempts: row.repetition_daily_attempts
+      },
+      comprehensive: { 
+        count: row.comprehensive_count, 
+        attempts: row.comprehensive_attempts,
+        dailyAttempts: row.comprehensive_daily_attempts
+      }
+    }
+  }))
   
   return analyticsData
 }
