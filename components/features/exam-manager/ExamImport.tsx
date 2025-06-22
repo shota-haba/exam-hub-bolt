@@ -33,11 +33,11 @@ export function ExamImport() {
   }
 
   return (
-    <Card className="border-dashed bg-muted/20 hover:bg-muted/30 transition-colors">
+    <Card className="border-dashed">
       <CardHeader>
         <CardTitle className="text-sm font-medium">試験データインポート</CardTitle>
         <CardDescription className="text-xs">
-          JSON形式の問題セットをアップロード
+          JSON形式の試験データをアップロード
         </CardDescription>
       </CardHeader>
       <CardContent>

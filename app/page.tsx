@@ -11,7 +11,7 @@ export default function Home() {
               Exam Hub
             </h1>
             <p className="text-lg text-muted-foreground">
-              試験対策分析プラットフォーム
+              学習プラットフォーム
             </p>
           </div>
           

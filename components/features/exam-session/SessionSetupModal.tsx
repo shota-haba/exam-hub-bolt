@@ -79,7 +79,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                       <div className="flex justify-between items-center">
                         <span>{label}</span>
                         <span className="text-xs text-muted-foreground">
-                          {count}問
+                          {count}設問
                         </span>
                       </div>
                     </Label>
@@ -91,7 +91,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
           <div>
             <Label className="text-sm font-medium">
-              問題数: {questionCount[0]}
+              設問数: {questionCount[0]}
             </Label>
             <Slider
               value={questionCount}
@@ -110,7 +110,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
           <div>
             <Label className="text-sm font-medium">
-              制限時間: {timePerQuestion[0]}秒/問
+              制限時間: {timePerQuestion[0]}秒/設問
             </Label>
             <Slider
               value={timePerQuestion}

@@ -32,13 +32,10 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="flex h-14 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center space-x-6">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-foreground text-background font-bold text-xs">
-              E
-            </div>
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <span className="font-semibold">Exam Hub</span>
           </Link>
           
@@ -46,15 +43,21 @@ export default function Header() {
             <nav className="flex items-center space-x-6">
               <Link 
                 href="/dashboard" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
               >
                 ダッシュボード
               </Link>
               <Link 
                 href="/exams" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
               >
                 試験管理
+              </Link>
+              <Link 
+                href="/browse" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                共有
               </Link>
             </nav>
           )}
@@ -102,6 +105,11 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/exams" className="cursor-pointer">
                     試験管理
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/browse" className="cursor-pointer">
+                    共有
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

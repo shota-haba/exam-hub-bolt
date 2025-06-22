@@ -21,7 +21,6 @@ export function ShareToggle({ examId, initialShared, onChange }: ShareToggleProp
     startTransition(async () => {
       const result = await updateExamSharedAction(examId, checked)
       if (!result.success) {
-        // エラー時は元に戻す
         setIsShared(!checked)
       } else if (onChange) {
         onChange()

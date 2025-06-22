@@ -34,7 +34,7 @@ export async function getSharedExams(
     .from('exam_sets')
     .select(`
       *,
-      exam_likes!inner(user_id)
+      exam_likes!left(user_id)
     `)
     .eq('is_shared', true)
     .neq('user_id', userId)
@@ -71,7 +71,7 @@ export async function getExamSet(examId: string, userId: string): Promise<ExamSe
     .from('exam_sets')
     .select('*')
     .eq('id', examId)
-    .eq('user_id', userId)
+    .or(`user_id.eq.${userId},is_shared.eq.true`)
     .single()
   
   if (error) return null
@@ -269,6 +269,86 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
 }
 
 /**
+ * アナリティクスデータを取得（ダッシュボード用）
+ */
+export async function getAnalyticsData(userId: string) {
+  const supabase = await createClient()
+  
+  // 試験一覧を取得
+  const { data: exams } = await supabase
+    .from('exam_sets')
+    .select('id, title, data')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  
+  if (!exams) return []
+  
+  const analyticsData = []
+  
+  for (const exam of exams) {
+    const allQuestions = exam.data?.questions || []
+    
+    // 進捗データを取得
+    const { data: progressData } = await supabase
+      .from('user_progress')
+      .select('question_id, last_result')
+      .eq('user_id', userId)
+      .eq('exam_set_id', exam.id)
+    
+    const progressMap = new Map(
+      (progressData || []).map(p => [p.question_id, p.last_result])
+    )
+    
+    // セッションデータを取得
+    const { data: sessionData } = await supabase
+      .from('session_results')
+      .select('session_mode, created_at')
+      .eq('user_id', userId)
+      .eq('exam_set_id', exam.id)
+    
+    // 今日の日付
+    const today = new Date().toDateString()
+    
+    // 日計セッション数
+    const dailySessions = (sessionData || []).filter(session => 
+      new Date(session.created_at).toDateString() === today
+    ).length
+    
+    // 累計セッション数
+    const totalSessions = sessionData?.length || 0
+    
+    // モード別統計
+    const sessionCounts = (sessionData || []).reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    // KPI計算
+    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
+    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
+    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
+    
+    analyticsData.push({
+      examId: exam.id,
+      examTitle: exam.title,
+      warmupCount,
+      reviewCount,
+      repetitionCount,
+      dailySessions,
+      totalSessions,
+      modeStats: {
+        warmup: { count: warmupCount, attempts: sessionCounts.warmup || 0 },
+        review: { count: reviewCount, attempts: sessionCounts.review || 0 },
+        repetition: { count: repetitionCount, attempts: sessionCounts.repetition || 0 },
+        comprehensive: { count: allQuestions.length, attempts: sessionCounts.comprehensive || 0 }
+      }
+    })
+  }
+  
+  return analyticsData
+}
+
+/**
  * 試験をインポート
  */
 export async function importExamSet(
@@ -284,6 +364,42 @@ export async function importExamSet(
       title,
       user_id: userId,
       data: examData,
+      is_shared: false,
+      likes_count: 0
+    })
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+/**
+ * 共有試験をインポート
+ */
+export async function importSharedExam(
+  userId: string,
+  examId: string
+): Promise<ExamSet> {
+  const supabase = await createClient()
+  
+  // 元の試験データを取得
+  const { data: originalExam, error: fetchError } = await supabase
+    .from('exam_sets')
+    .select('title, data')
+    .eq('id', examId)
+    .eq('is_shared', true)
+    .single()
+  
+  if (fetchError || !originalExam) throw new Error('共有試験が見つかりません')
+  
+  // 新しい試験として作成
+  const { data, error } = await supabase
+    .from('exam_sets')
+    .insert({
+      title: `${originalExam.title} (コピー)`,
+      user_id: userId,
+      data: originalExam.data,
       is_shared: false,
       likes_count: 0
     })

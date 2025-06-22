@@ -25,7 +25,6 @@ export function LikeButton({ examId, initialLiked, initialCount, onChange }: Lik
     startTransition(async () => {
       const result = await toggleExamLikeAction(examId, isLiked)
       if (!result.success) {
-        // エラー時は元に戻す
         setIsLiked(!newLikedState)
         setCurrentLikesCount(prev => newLikedState ? prev - 1 : prev + 1)
       } else if (onChange) {

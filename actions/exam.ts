@@ -1,5 +1,3 @@
-'use server'
-
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -8,99 +6,122 @@ import {
   updateExamShared, 
   toggleExamLike, 
   saveSessionResult,
-  deleteExamSet 
+  deleteExamSet,
+  importSharedExam
 } from '@/lib/supabase/db'
+import { examSetSchema, transformImportedExam } from '@/lib/schemas/exam'
 import { SessionSaveData } from '@/lib/types'
 
-/**
- * 試験インポートアクション
- */
 export async function importExamAction(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
-  }
-  
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: '認証が必要です' }
+    }
+
     const file = formData.get('file') as File
     if (!file) {
-      throw new Error('ファイルが選択されていません')
+      return { success: false, error: 'ファイルが選択されていません' }
     }
+
+    const text = await file.text()
+    const jsonData = JSON.parse(text)
     
-    const fileContent = await file.text()
-    const jsonData = JSON.parse(fileContent)
+    const validatedData = examSetSchema.parse(jsonData)
+    const transformedData = transformImportedExam(validatedData)
     
-    // 簡単なバリデーション
-    if (!jsonData.試験 || !jsonData.問題集) {
-      throw new Error('無効なファイル形式です')
-    }
-    
-    await importExamSet(user.id, jsonData.試験, jsonData)
+    await importExamSet(user.id, transformedData.title, transformedData)
     
     revalidatePath('/exams')
     return { success: true }
   } catch (error) {
-    console.error('インポートエラー:', error)
-    return { success: false, error: 'インポートに失敗しました' }
+    console.error('Import error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'インポートに失敗しました' 
+    }
   }
 }
 
-/**
- * 試験共有状態更新アクション
- */
+export async function importSharedExamAction(examId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      redirect('/login')
+    }
+
+    await importSharedExam(user.id, examId)
+    
+    revalidatePath('/exams')
+    revalidatePath('/browse')
+    return { success: true }
+  } catch (error) {
+    console.error('Import shared exam error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'インポートに失敗しました' 
+    }
+  }
+}
+
 export async function updateExamSharedAction(examId: string, isShared: boolean) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
-  }
-  
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: '認証が必要です' }
+    }
+
     await updateExamShared(examId, user.id, isShared)
+    
     revalidatePath('/exams')
+    revalidatePath('/browse')
     return { success: true }
   } catch (error) {
-    console.error('共有状態更新エラー:', error)
-    return { success: false, error: '更新に失敗しました' }
+    console.error('Update shared error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    }
   }
 }
 
-/**
- * 試験いいね切り替えアクション
- */
 export async function toggleExamLikeAction(examId: string, hasLiked: boolean) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
-  }
-  
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: '認証が必要です' }
+    }
+
     await toggleExamLike(examId, user.id, hasLiked)
-    revalidatePath('/dashboard')
+    
+    revalidatePath('/browse')
     return { success: true }
   } catch (error) {
-    console.error('いいね切り替えエラー:', error)
-    return { success: false, error: '更新に失敗しました' }
+    console.error('Toggle like error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'いいねの更新に失敗しました' 
+    }
   }
 }
 
-/**
- * セッション結果保存アクション
- */
 export async function saveSessionResultAction(sessionData: SessionSaveData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
-  }
-  
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      throw new Error('認証が必要です')
+    }
+
     await saveSessionResult(
       user.id,
       sessionData.examId,
@@ -111,32 +132,57 @@ export async function saveSessionResultAction(sessionData: SessionSaveData) {
       sessionData.totalQuestions,
       sessionData.questionsData
     )
+
+    // ユーザー進捗を更新
+    for (const questionResult of sessionData.questionsData) {
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          question_id: questionResult.question.id,
+          exam_set_id: sessionData.examId,
+          last_result: questionResult.isCorrect,
+          attempt_count: 1,
+          last_attempted: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,question_id'
+        })
+
+      if (error) {
+        console.error('Progress update error:', error)
+      }
+    }
     
     revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
-    console.error('セッション結果保存エラー:', error)
-    return { success: false, error: '保存に失敗しました' }
+    console.error('Save session error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'セッション保存に失敗しました' 
+    }
   }
 }
 
-/**
- * 試験削除アクション
- */
 export async function deleteExamAction(examId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
-  }
-  
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      redirect('/login')
+    }
+
     await deleteExamSet(examId, user.id)
+    
     revalidatePath('/exams')
+    revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
-    console.error('試験削除エラー:', error)
-    return { success: false, error: '削除に失敗しました' }
+    console.error('Delete exam error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '削除に失敗しました' 
+    }
   }
 }

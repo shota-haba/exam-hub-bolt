@@ -39,7 +39,6 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
-  const [showExplanation, setShowExplanation] = useState(false)
   const [timeLeft, setTimeLeft] = useState(timeLimit)
   const [results, setResults] = useState<SessionResults | null>(null)
   const [sessionStartTime] = useState(new Date())
@@ -97,20 +96,13 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       }
       return updated
     })
-    
-    toast({
-      title: isCorrect ? '正解！' : '不正解',
-      description: isCorrect ? 'よくできました' : '次は頑張りましょう',
-      variant: isCorrect ? 'default' : 'destructive',
-    })
-  }, [isAnswered, currentQuestion, timeLimit, timeLeft, currentQuestionIndex, toast])
+  }, [isAnswered, currentQuestion, timeLimit, timeLeft, currentQuestionIndex])
   
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
       setSelectedAnswer(null)
       setIsAnswered(false)
-      setShowExplanation(false)
     } else {
       finishSession()
     }
@@ -149,32 +141,32 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   if (results) {
     return (
       <main className="container py-8 px-4 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">学習結果</h1>
+        <h1 className="text-3xl font-bold mb-6">結果</h1>
         
-        <Card className="exam-card mb-6">
+        <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <ResultStat 
-                label="正解数" 
-                value={`${results.correctCount}/${results.totalQuestions}`} 
-              />
-              <ResultStat 
-                label="正答率" 
-                value={`${Math.round((results.correctCount / results.totalQuestions) * 100)}%`} 
-              />
-              <ResultStat 
-                label="所要時間" 
-                value={`${Math.round(results.timeTaken)}秒`} 
-              />
+              <div>
+                <p className="text-sm text-muted-foreground">正解数</p>
+                <p className="text-2xl font-bold">{results.correctCount}/{results.totalQuestions}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">正答率</p>
+                <p className="text-2xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">所要時間</p>
+                <p className="text-2xl font-bold">{Math.round(results.timeTaken)}秒</p>
+              </div>
             </div>
             
-            <h2 className="text-xl font-semibold mb-4">問題別結果</h2>
+            <h2 className="text-xl font-semibold mb-4">設問レビュー</h2>
             <div className="space-y-4">
               {results.questions.map((item, index) => (
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                      <div className="w-3 h-3 rounded-full bg-current"></div>
+                    <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
+                      <div className={`w-3 h-3 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{item.question.text}</p>
@@ -182,7 +174,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
                         {item.selectedAnswer ? `回答: ${item.question.choices.find(c => c.identifier === item.selectedAnswer)?.text || '不明'}` : '未回答'}
                       </p>
                       {!item.isCorrect && (
-                        <p className="text-sm text-green-600 mt-1">
+                        <p className="text-sm mt-1">
                           正解: {item.question.choices.find(c => c.isCorrect)?.text || '不明'}
                         </p>
                       )}
@@ -214,7 +206,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   if (!currentQuestion) {
     return (
       <div className="container py-8 px-4 flex flex-col items-center">
-        <p className="mb-4">問題が見つかりませんでした</p>
+        <p className="mb-4">設問が見つかりませんでした</p>
         <Button asChild>
           <Link href="/exams">試験一覧に戻る</Link>
         </Button>
@@ -228,11 +220,11 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         <div>
           <h2 className="text-2xl font-bold">{examSet.title}</h2>
           <p className="text-sm text-muted-foreground">
-            {currentQuestionIndex + 1} / {questions.length}問
+            {currentQuestionIndex + 1} / {questions.length}設問
           </p>
         </div>
         {timeLimit > 0 && (
-          <div className="flex items-center text-orange-600">
+          <div className="flex items-center">
             <span className="font-bold">{timeLeft}秒</span>
           </div>
         )}
@@ -243,7 +235,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         className="h-2 mb-6" 
       />
       
-      <Card className="exam-card mb-6">
+      <Card className="mb-6">
         <CardContent className="pt-6">
           <h2 className="text-xl font-semibold mb-6">{currentQuestion.text}</h2>
           
@@ -255,9 +247,10 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
-                className={`question-choice ${
-                  isAnswered && choice.isCorrect ? 'correct' : 
-                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'incorrect' : ''
+                className={`relative p-4 border rounded-lg ${
+                  isAnswered && choice.isCorrect ? 'border-foreground bg-muted' : 
+                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'border-destructive bg-destructive/5' : 
+                  'hover:bg-muted/50'
                 }`}
               >
                 <RadioGroupItem
@@ -270,69 +263,39 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
                   htmlFor={choice.id} 
                   className="flex items-start cursor-pointer"
                 >
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary text-primary shadow peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground mr-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary text-primary mr-3">
                     <span className="text-sm">{choice.identifier}</span>
                   </div>
                   <div>{choice.text}</div>
                 </Label>
-                {isAnswered && choice.isCorrect && (
-                  <div className="absolute right-4 top-4 w-5 h-5 bg-green-600 rounded-full"></div>
-                )}
-                {isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect && (
-                  <div className="absolute right-4 top-4 w-5 h-5 bg-red-600 rounded-full"></div>
-                )}
               </div>
             ))}
           </RadioGroup>
           
           {isAnswered && currentQuestion.explanation && (
-            <div className={`explanation-box transition-all duration-300 ${showExplanation ? 'opacity-100 max-h-80' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+            <div className="mt-6 p-4 border rounded-lg bg-muted">
               <div className="flex">
-                <div className="w-5 h-5 bg-blue-600 rounded-full mr-2 shrink-0 mt-0.5"></div>
                 <div>
-                  <h3 className="font-medium text-blue-800 mb-1">解説</h3>
-                  <p className="text-sm text-blue-900">{currentQuestion.explanation}</p>
+                  <h3 className="font-medium mb-1">解説</h3>
+                  <p className="text-sm">{currentQuestion.explanation}</p>
                 </div>
               </div>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="justify-between pt-2 pb-6">
-          {isAnswered && currentQuestion.explanation && (
-            <Button 
-              variant="outline" 
-              onClick={() => setShowExplanation(!showExplanation)}
-            >
-              {showExplanation ? '解説を隠す' : '解説を見る'}
-            </Button>
-          )}
-          
+        <CardFooter className="justify-end pt-2 pb-6">
           {isAnswered ? (
-            <Button onClick={handleNextQuestion} className="ml-auto">
-              {currentQuestionIndex < questions.length - 1 ? '次の問題' : '結果を見る'}
+            <Button onClick={handleNextQuestion}>
+              {currentQuestionIndex < questions.length - 1 ? '次の設問' : '結果を見る'}
             </Button>
           ) : (
-            <Button variant="outline" onClick={() => handleAnswer(null)} className="ml-auto">
+            <Button variant="outline" onClick={() => handleAnswer(null)}>
               スキップ
             </Button>
           )}
         </CardFooter>
       </Card>
     </main>
-  )
-}
-
-function ResultStat({ 
-  label, value
-}: { 
-  label: string 
-  value: string
-}) {
-  return (
-    <div className="result-stat">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
   )
 }
