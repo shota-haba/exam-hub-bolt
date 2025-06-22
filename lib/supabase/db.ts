@@ -138,60 +138,168 @@ export async function getQuestionsForSession(
 }
 
 /**
- * 試験のモード別統計を取得
+ * 複数試験のモード別統計を一括取得（N+1問題解決）
  */
-export async function getExamStatsByMode(examId: string, userId: string): Promise<ExamModeStats> {
+export async function getBulkExamStatsByMode(examIds: string[], userId: string): Promise<Map<string, ExamModeStats>> {
+  if (examIds.length === 0) return new Map()
+  
   const supabase = await createClient()
   
-  const { data: examSet } = await supabase
+  // 全試験の問題データを一括取得
+  const { data: examSets } = await supabase
     .from('exam_sets')
-    .select('data')
-    .eq('id', examId)
-    .single()
+    .select('id, data')
+    .in('id', examIds)
   
-  if (!examSet?.data?.questions) {
-    return {
-      warmup: { count: 0, attempts: 0 },
-      review: { count: 0, attempts: 0 },
-      repetition: { count: 0, attempts: 0 },
-      comprehensive: { count: 0, attempts: 0 }
-    }
-  }
-  
-  const allQuestions = examSet.data.questions as Question[]
-  
+  // 全試験の進捗データを一括取得
   const { data: progressData } = await supabase
     .from('user_progress')
-    .select('question_id, last_result')
+    .select('exam_set_id, question_id, last_result')
     .eq('user_id', userId)
-    .eq('exam_set_id', examId)
+    .in('exam_set_id', examIds)
   
-  const progressMap = new Map(
-    (progressData || []).map(p => [p.question_id, p.last_result])
-  )
-  
+  // 全試験のセッションデータを一括取得
   const { data: sessionData } = await supabase
     .from('session_results')
-    .select('session_mode')
+    .select('exam_set_id, session_mode')
     .eq('user_id', userId)
-    .eq('exam_set_id', examId)
+    .in('exam_set_id', examIds)
   
-  const sessionCounts = (sessionData || []).reduce((acc, session) => {
-    acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const statsMap = new Map<string, ExamModeStats>()
   
-  const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
-  const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
-  const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
-  const comprehensiveCount = allQuestions.length
-  
-  return {
-    warmup: { count: warmupCount, attempts: sessionCounts.warmup || 0 },
-    review: { count: reviewCount, attempts: sessionCounts.review || 0 },
-    repetition: { count: repetitionCount, attempts: sessionCounts.repetition || 0 },
-    comprehensive: { count: comprehensiveCount, attempts: sessionCounts.comprehensive || 0 }
+  for (const examSet of examSets || []) {
+    const allQuestions = examSet.data?.questions || []
+    const examProgress = (progressData || []).filter(p => p.exam_set_id === examSet.id)
+    const examSessions = (sessionData || []).filter(s => s.exam_set_id === examSet.id)
+    
+    const progressMap = new Map(examProgress.map(p => [p.question_id, p.last_result]))
+    
+    const sessionCounts = examSessions.reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
+    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
+    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
+    
+    statsMap.set(examSet.id, {
+      warmup: { count: warmupCount, attempts: sessionCounts.warmup || 0 },
+      review: { count: reviewCount, attempts: sessionCounts.review || 0 },
+      repetition: { count: repetitionCount, attempts: sessionCounts.repetition || 0 },
+      comprehensive: { count: allQuestions.length, attempts: sessionCounts.comprehensive || 0 }
+    })
   }
+  
+  return statsMap
+}
+
+/**
+ * 試験のモード別統計を取得（単一試験用）
+ */
+export async function getExamStatsByMode(examId: string, userId: string): Promise<ExamModeStats> {
+  const statsMap = await getBulkExamStatsByMode([examId], userId)
+  return statsMap.get(examId) || {
+    warmup: { count: 0, attempts: 0 },
+    review: { count: 0, attempts: 0 },
+    repetition: { count: 0, attempts: 0 },
+    comprehensive: { count: 0, attempts: 0 }
+  }
+}
+
+/**
+ * アナリティクスデータを取得（ダッシュボード用）
+ */
+export async function getAnalyticsData(userId: string) {
+  const supabase = await createClient()
+  
+  const { data: exams } = await supabase
+    .from('exam_sets')
+    .select('id, title, data')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  
+  if (!exams) return []
+  
+  const examIds = exams.map(e => e.id)
+  
+  // 全試験の進捗データを一括取得
+  const { data: progressData } = await supabase
+    .from('user_progress')
+    .select('exam_set_id, question_id, last_result')
+    .eq('user_id', userId)
+    .in('exam_set_id', examIds)
+  
+  // 全試験のセッションデータを一括取得
+  const { data: sessionData } = await supabase
+    .from('session_results')
+    .select('exam_set_id, session_mode, created_at')
+    .eq('user_id', userId)
+    .in('exam_set_id', examIds)
+  
+  const today = new Date().toDateString()
+  
+  const analyticsData = []
+  
+  for (const exam of exams) {
+    const allQuestions = exam.data?.questions || []
+    const examProgress = (progressData || []).filter(p => p.exam_set_id === exam.id)
+    const examSessions = (sessionData || []).filter(s => s.exam_set_id === exam.id)
+    
+    const progressMap = new Map(examProgress.map(p => [p.question_id, p.last_result]))
+    
+    const todaySessions = examSessions.filter(session => 
+      new Date(session.created_at).toDateString() === today
+    )
+    
+    const todaySessionCounts = todaySessions.reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const totalSessionCounts = examSessions.reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
+    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
+    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
+    
+    analyticsData.push({
+      examId: exam.id,
+      examTitle: exam.title,
+      warmupCount,
+      reviewCount,
+      repetitionCount,
+      dailySessions: todaySessions.length,
+      totalSessions: examSessions.length,
+      modeStats: {
+        warmup: { 
+          count: warmupCount, 
+          attempts: totalSessionCounts.warmup || 0,
+          dailyAttempts: todaySessionCounts.warmup || 0
+        },
+        review: { 
+          count: reviewCount, 
+          attempts: totalSessionCounts.review || 0,
+          dailyAttempts: todaySessionCounts.review || 0
+        },
+        repetition: { 
+          count: repetitionCount, 
+          attempts: totalSessionCounts.repetition || 0,
+          dailyAttempts: todaySessionCounts.repetition || 0
+        },
+        comprehensive: { 
+          count: allQuestions.length, 
+          attempts: totalSessionCounts.comprehensive || 0,
+          dailyAttempts: todaySessionCounts.comprehensive || 0
+        }
+      }
+    })
+  }
+  
+  return analyticsData
 }
 
 /**
@@ -219,99 +327,6 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
   const answeredQuestions = progressData?.length || 0
   
   return Math.round((answeredQuestions / totalQuestions) * 100)
-}
-
-/**
- * アナリティクスデータを取得（ダッシュボード用）
- */
-export async function getAnalyticsData(userId: string) {
-  const supabase = await createClient()
-  
-  const { data: exams } = await supabase
-    .from('exam_sets')
-    .select('id, title, data')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-  
-  if (!exams) return []
-  
-  const analyticsData = []
-  
-  for (const exam of exams) {
-    const allQuestions = exam.data?.questions || []
-    
-    const { data: progressData } = await supabase
-      .from('user_progress')
-      .select('question_id, last_result')
-      .eq('user_id', userId)
-      .eq('exam_set_id', exam.id)
-    
-    const progressMap = new Map(
-      (progressData || []).map(p => [p.question_id, p.last_result])
-    )
-    
-    const { data: sessionData } = await supabase
-      .from('session_results')
-      .select('session_mode, created_at')
-      .eq('user_id', userId)
-      .eq('exam_set_id', exam.id)
-    
-    const today = new Date().toDateString()
-    
-    const todaySessions = (sessionData || []).filter(session => 
-      new Date(session.created_at).toDateString() === today
-    )
-    
-    const totalSessions = sessionData?.length || 0
-    
-    const todaySessionCounts = todaySessions.reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const totalSessionCounts = (sessionData || []).reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
-    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
-    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
-    
-    analyticsData.push({
-      examId: exam.id,
-      examTitle: exam.title,
-      warmupCount,
-      reviewCount,
-      repetitionCount,
-      dailySessions: todaySessions.length,
-      totalSessions,
-      modeStats: {
-        warmup: { 
-          count: warmupCount, 
-          attempts: totalSessionCounts.warmup || 0,
-          dailyAttempts: todaySessionCounts.warmup || 0
-        },
-        review: { 
-          count: reviewCount, 
-          attempts: totalSessionCounts.review || 0,
-          dailyAttempts: todaySessionCounts.review || 0
-        },
-        repetition: { 
-          count: repetitionCount, 
-          attempts: totalSessionCounts.repetition || 0,
-          dailyAttempts: todaySessionCounts.repetition || 0
-        },
-        comprehensive: { 
-          count: allQuestions.length, 
-          attempts: totalSessionCounts.comprehensive || 0,
-          dailyAttempts: todaySessionCounts.comprehensive || 0
-        }
-      }
-    })
-  }
-  
-  return analyticsData
 }
 
 /**

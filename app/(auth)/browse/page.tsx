@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
-import { getSharedExams, getUserExams, getExamStatsByMode } from '@/lib/supabase/db'
+import { getSharedExams, getUserExams, getBulkExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
-import { ExamSet } from '@/lib/types'
+import { ExamSet, ExamModeStats } from '@/lib/types'
 import { ImportSharedExamButton } from '@/components/features/exam-browser/ImportSharedExamButton'
 
 interface BrowsePageProps {
@@ -33,6 +33,10 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   ])
 
   const mySharedExams = userExams.filter(exam => exam.is_shared)
+  
+  // N+1問題を解決：全試験の統計を一括取得
+  const allExamIds = [...mySharedExams.map(e => e.id), ...sharedExams.map(e => e.id)]
+  const statsMap = await getBulkExamStatsByMode(allExamIds, user.id)
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -46,7 +50,16 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             <h3 className="text-lg font-medium mb-4">共有中の試験</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {mySharedExams.map((exam) => (
-                <MySharedExamCard key={exam.id} exam={exam} userId={user.id} />
+                <MySharedExamCard 
+                  key={exam.id} 
+                  exam={exam} 
+                  modeStats={statsMap.get(exam.id) || {
+                    warmup: { count: 0, attempts: 0 },
+                    review: { count: 0, attempts: 0 },
+                    repetition: { count: 0, attempts: 0 },
+                    comprehensive: { count: 0, attempts: 0 }
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -65,7 +78,16 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             {sharedExams.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sharedExams.map((exam) => (
-                  <SharedExamCard key={exam.id} exam={exam} userId={user.id} />
+                  <SharedExamCard 
+                    key={exam.id} 
+                    exam={exam} 
+                    modeStats={statsMap.get(exam.id) || {
+                      warmup: { count: 0, attempts: 0 },
+                      review: { count: 0, attempts: 0 },
+                      repetition: { count: 0, attempts: 0 },
+                      comprehensive: { count: 0, attempts: 0 }
+                    }}
+                  />
                 ))}
               </div>
             ) : (
@@ -85,9 +107,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   )
 }
 
-async function MySharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+function MySharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
   const questionCount = exam.data?.questions?.length || 0
-  const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
     <Card className="h-full flex flex-col">
@@ -127,9 +148,8 @@ async function MySharedExamCard({ exam, userId }: { exam: ExamSet; userId: strin
   )
 }
 
-async function SharedExamCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+function SharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
   const questionCount = exam.data?.questions?.length || 0
-  const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
     <Card className="h-full flex flex-col">

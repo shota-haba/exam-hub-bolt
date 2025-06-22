@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Download } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -13,9 +13,9 @@ import {
 import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
-import { getUserExams, getExamStatsByMode } from '@/lib/supabase/db'
+import { getUserExams, getBulkExamStatsByMode } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
-import { ExamSet } from '@/lib/types'
+import { ExamSet, ExamModeStats } from '@/lib/types'
 import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamButton'
 import { ExportExamButton } from '@/components/features/exam-manager/ExportExamButton'
 
@@ -28,6 +28,10 @@ export default async function ExamsPage() {
   }
 
   const exams = await getUserExams(user.id)
+  
+  // N+1問題を解決：全試験の統計を一括取得
+  const examIds = exams.map(exam => exam.id)
+  const statsMap = await getBulkExamStatsByMode(examIds, user.id)
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -51,7 +55,16 @@ export default async function ExamsPage() {
             {exams.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {exams.map((exam) => (
-                  <ExamManagementCard key={exam.id} exam={exam} userId={user.id} />
+                  <ExamManagementCard 
+                    key={exam.id} 
+                    exam={exam} 
+                    modeStats={statsMap.get(exam.id) || {
+                      warmup: { count: 0, attempts: 0 },
+                      review: { count: 0, attempts: 0 },
+                      repetition: { count: 0, attempts: 0 },
+                      comprehensive: { count: 0, attempts: 0 }
+                    }}
+                  />
                 ))}
               </div>
             ) : (
@@ -71,9 +84,8 @@ export default async function ExamsPage() {
   )
 }
 
-async function ExamManagementCard({ exam, userId }: { exam: ExamSet; userId: string }) {
+function ExamManagementCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
   const questionCount = exam.data?.questions?.length || 0
-  const modeStats = await getExamStatsByMode(exam.id, userId)
 
   return (
     <Card className="h-full flex flex-col">
