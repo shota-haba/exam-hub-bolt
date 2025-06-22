@@ -6,8 +6,6 @@ import { useAuth } from '@/components/shared/AuthProvider'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { SessionMode, Question, QuestionResult, ExamSet } from '@/lib/types/index'
 import { saveSessionResultAction } from '@/lib/actions/exam'
@@ -234,11 +232,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         <CardContent className="pt-6">
           <h2 className="mb-6">{currentQuestion.text}</h2>
           
-          <RadioGroup 
-            value={selectedAnswer || ''} 
-            onValueChange={isAnswered ? undefined : handleAnswer}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
@@ -246,25 +240,19 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
                   isAnswered && choice.isCorrect ? 'correct' : 
                   isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'incorrect' : ''
                 }`}
+                onClick={() => !isAnswered && handleAnswer(choice.identifier)}
               >
-                <RadioGroupItem
-                  value={choice.identifier}
-                  id={choice.id}
-                  disabled={isAnswered}
-                  className="sr-only"
-                />
-                <Label 
-                  htmlFor={choice.id} 
-                  className="flex items-start cursor-pointer w-full"
-                >
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary text-primary mr-3">
+                <div className="flex items-start w-full">
+                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border mr-3 ${
+                    selectedAnswer === choice.identifier ? 'border-foreground bg-foreground text-background' : 'border-primary text-primary'
+                  }`}>
                     <span className="text-sm">{choice.identifier}</span>
                   </div>
-                  <div>{choice.text}</div>
-                </Label>
+                  <div className="flex-1">{choice.text}</div>
+                </div>
               </div>
             ))}
-          </RadioGroup>
+          </div>
           
           {isAnswered && currentQuestion.explanation && (
             <div className="mt-6 p-4 border rounded bg-muted">
@@ -275,13 +263,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         </CardContent>
         
         <CardFooter className="justify-end pt-2 pb-6">
-          {isAnswered ? (
+          {isAnswered && (
             <Button onClick={handleNextQuestion}>
               {currentQuestionIndex < questions.length - 1 ? '次の設問' : '結果を見る'}
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => handleAnswer(null)}>
-              スキップ
             </Button>
           )}
         </CardFooter>
