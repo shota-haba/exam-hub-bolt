@@ -134,18 +134,14 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
     }
   }
   
-  const restartExam = () => {
-    router.refresh()
-  }
-  
   if (results) {
     return (
-      <main className="container py-8 px-4 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">結果</h1>
+      <main className="page-container">
+        <h1>結果</h1>
         
-        <Card className="mb-6">
+        <Card className="mt-8">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-3 gap-8 mb-8">
               <div>
                 <p className="text-sm text-muted-foreground">正解数</p>
                 <p className="text-2xl font-bold">{results.correctCount}/{results.totalQuestions}</p>
@@ -160,10 +156,10 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
               </div>
             </div>
             
-            <h2 className="text-xl font-semibold mb-4">設問レビュー</h2>
+            <h2 className="mb-4">設問レビュー</h2>
             <div className="space-y-4">
               {results.questions.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg">
+                <div key={index} className="p-4 border rounded">
                   <div className="flex items-start gap-3">
                     <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
                       <div className={`w-3 h-3 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
@@ -190,10 +186,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
               ))}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center gap-4 pt-2 pb-6">
-            <Button onClick={restartExam} variant="outline">
-              再学習
-            </Button>
+          <CardFooter className="flex justify-center pt-2 pb-6">
             <Button asChild>
               <Link href="/dashboard">ダッシュボード</Link>
             </Button>
@@ -205,20 +198,22 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   
   if (!currentQuestion) {
     return (
-      <div className="container py-8 px-4 flex flex-col items-center">
-        <p className="mb-4">設問が見つかりませんでした</p>
-        <Button asChild>
-          <Link href="/exams">試験一覧に戻る</Link>
-        </Button>
+      <div className="page-container">
+        <div className="flex flex-col items-center py-16">
+          <p className="mb-4">設問が見つかりませんでした</p>
+          <Button asChild>
+            <Link href="/exams">試験一覧に戻る</Link>
+          </Button>
+        </div>
       </div>
     )
   }
   
   return (
-    <main className="container py-8 px-4 max-w-3xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
+    <main className="page-container">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">{examSet.title}</h2>
+          <h2>{examSet.title}</h2>
           <p className="text-sm text-muted-foreground">
             {currentQuestionIndex + 1} / {questions.length}設問
           </p>
@@ -235,9 +230,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         className="h-2 mb-6" 
       />
       
-      <Card className="mb-6">
+      <Card>
         <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-6">{currentQuestion.text}</h2>
+          <h2 className="mb-6">{currentQuestion.text}</h2>
           
           <RadioGroup 
             value={selectedAnswer || ''} 
@@ -247,21 +242,20 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
-                className={`relative p-4 border rounded-lg ${
-                  isAnswered && choice.isCorrect ? 'border-foreground bg-muted' : 
-                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'border-destructive bg-destructive/5' : 
-                  'hover:bg-muted/50'
+                className={`choice-option ${
+                  isAnswered && choice.isCorrect ? 'correct' : 
+                  isAnswered && selectedAnswer === choice.identifier && !choice.isCorrect ? 'incorrect' : ''
                 }`}
               >
                 <RadioGroupItem
                   value={choice.identifier}
                   id={choice.id}
                   disabled={isAnswered}
-                  className="absolute left-4 top-4 peer sr-only"
+                  className="sr-only"
                 />
                 <Label 
                   htmlFor={choice.id} 
-                  className="flex items-start cursor-pointer"
+                  className="flex items-start cursor-pointer w-full"
                 >
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary text-primary mr-3">
                     <span className="text-sm">{choice.identifier}</span>
@@ -273,13 +267,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
           </RadioGroup>
           
           {isAnswered && currentQuestion.explanation && (
-            <div className="mt-6 p-4 border rounded-lg bg-muted">
-              <div className="flex">
-                <div>
-                  <h3 className="font-medium mb-1">解説</h3>
-                  <p className="text-sm">{currentQuestion.explanation}</p>
-                </div>
-              </div>
+            <div className="mt-6 p-4 border rounded bg-muted">
+              <h3 className="font-medium mb-1">解説</h3>
+              <p className="text-sm">{currentQuestion.explanation}</p>
             </div>
           )}
         </CardContent>

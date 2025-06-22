@@ -33,29 +33,29 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="flex h-14 items-center justify-between px-4 max-w-7xl mx-auto">
-        <div className="flex items-center space-x-6">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
-            <span className="font-semibold">Exam Hub</span>
+      <div className="flex h-12 items-center justify-between px-6 max-w-6xl mx-auto">
+        <div className="flex items-center space-x-8">
+          <Link href={user ? "/dashboard" : "/"} className="font-semibold">
+            Exam Hub
           </Link>
           
           {user && (
             <nav className="flex items-center space-x-6">
               <Link 
                 href="/dashboard" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 ダッシュボード
               </Link>
               <Link 
                 href="/exams" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
-                試験管理
+                セッション
               </Link>
               <Link 
                 href="/browse" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 共有
               </Link>
@@ -63,7 +63,7 @@ export default function Header() {
           )}
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center">
           {loading ? (
             <div className="h-6 w-6 bg-muted animate-pulse rounded-full" />
           ) : !user ? (
@@ -96,22 +96,6 @@ export default function Header() {
                     </p>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    ダッシュボード
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/exams" className="cursor-pointer">
-                    試験管理
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/browse" className="cursor-pointer">
-                    共有
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleSignOut} 

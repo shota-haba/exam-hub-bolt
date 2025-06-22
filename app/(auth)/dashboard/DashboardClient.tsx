@@ -41,12 +41,9 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">ダッシュボード</h1>
-        <Button variant="outline" asChild>
-          <Link href="/exams">試験管理</Link>
-        </Button>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>ダッシュボード</h1>
       </div>
 
       {analytics.length > 0 ? (
@@ -59,12 +56,12 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>試験タイトル</TableHead>
-                  <TableHead className="text-right">予習設問数</TableHead>
-                  <TableHead className="text-right">復習設問数</TableHead>
-                  <TableHead className="text-right">反復設問数</TableHead>
-                  <TableHead className="text-right">日計セッション</TableHead>
-                  <TableHead className="text-right">累計セッション</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="text-right w-20">予習</TableHead>
+                  <TableHead className="text-right w-20">復習</TableHead>
+                  <TableHead className="text-right w-20">反復</TableHead>
+                  <TableHead className="text-right w-20">日計</TableHead>
+                  <TableHead className="text-right w-20">累計</TableHead>
+                  <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -92,13 +89,13 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
         </Card>
       ) : (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="text-center space-y-2">
-              <h3 className="font-medium">試験データなし</h3>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="text-center space-y-4">
+              <h3>試験データなし</h3>
+              <Button asChild>
+                <Link href="/exams">試験インポート</Link>
+              </Button>
             </div>
-            <Button className="mt-4" asChild>
-              <Link href="/exams">試験インポート</Link>
-            </Button>
           </CardContent>
         </Card>
       )}

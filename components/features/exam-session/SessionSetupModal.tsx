@@ -32,10 +32,17 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
   const maxQuestions = modeStats[selectedMode]?.count || 0
   const isStartDisabled = maxQuestions === 0
 
+  // スライダーの最大値と最小値を適切に設定
+  const minQuestions = Math.min(5, maxQuestions)
+  const maxSliderQuestions = Math.max(maxQuestions, 5)
+  
+  // 選択された設問数が最大値を超えないように調整
+  const adjustedQuestionCount = Math.min(questionCount[0], maxQuestions)
+
   const handleStart = () => {
     const params = new URLSearchParams({
       mode: selectedMode,
-      count: questionCount[0].toString(),
+      count: adjustedQuestionCount.toString(),
       time: timePerQuestion[0].toString()
     })
     
@@ -47,7 +54,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">セッション設定</DialogTitle>
+          <DialogTitle>セッション設定</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -57,7 +64,8 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               value={selectedMode} 
               onValueChange={(value) => {
                 setSelectedMode(value as SessionMode)
-                setQuestionCount([Math.min(questionCount[0], modeStats[value as SessionMode]?.count || 0)])
+                const newMaxQuestions = modeStats[value as SessionMode]?.count || 0
+                setQuestionCount([Math.min(questionCount[0], newMaxQuestions)])
               }}
               className="mt-2 space-y-2"
             >
@@ -91,19 +99,19 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
           <div>
             <Label className="text-sm font-medium">
-              設問数: {questionCount[0]}
+              設問数: {adjustedQuestionCount}
             </Label>
             <Slider
-              value={questionCount}
-              onValueChange={setQuestionCount}
-              max={Math.max(maxQuestions, 5)}
-              min={5}
+              value={[adjustedQuestionCount]}
+              onValueChange={(value) => setQuestionCount([Math.min(value[0], maxQuestions)])}
+              max={maxSliderQuestions}
+              min={minQuestions}
               step={1}
               className="mt-2"
               disabled={isStartDisabled}
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>5</span>
+              <span>{minQuestions}</span>
               <span>{maxQuestions}</span>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
+import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { getSharedExams } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
@@ -31,40 +31,41 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   })
 
   return (
-    <main className="container py-8 px-4 max-w-7xl mx-auto space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">共有</h1>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/dashboard">ダッシュボード</Link>
-        </Button>
+    <main className="page-container">
+      <div className="page-header">
+        <h1>共有</h1>
       </div>
       
-      <div>
-        <Suspense fallback={
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-muted rounded-lg animate-pulse" />
-            ))}
-          </div>
-        }>
-          {sharedExams.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {sharedExams.map((exam) => (
-                <SharedExamCard key={exam.id} exam={exam} userId={user.id} />
+      <div className="space-y-8">
+        <ExamImport />
+        
+        <div>
+          <h2 className="mb-4">共有試験</h2>
+          
+          <Suspense fallback={
+            <div className="card-grid">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-48 bg-muted rounded animate-pulse" />
               ))}
             </div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="text-center space-y-2">
-                  <h3 className="font-medium">共有試験なし</h3>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </Suspense>
+          }>
+            {sharedExams.length > 0 ? (
+              <div className="card-grid">
+                {sharedExams.map((exam) => (
+                  <SharedExamCard key={exam.id} exam={exam} userId={user.id} />
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="text-center space-y-4">
+                    <h3>共有試験なし</h3>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </Suspense>
+        </div>
       </div>
     </main>
   )
