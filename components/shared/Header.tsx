@@ -62,7 +62,7 @@ export default function Header() {
                   isActive("/exams") ? "text-foreground" : "text-foreground/60"
                 )}
               >
-                試験管理
+                Session
               </Link>
               <Link 
                 href="/browse" 
@@ -71,7 +71,7 @@ export default function Header() {
                   isActive("/browse") ? "text-foreground" : "text-foreground/60"
                 )}
               >
-                共有
+                Share
               </Link>
             </nav>
           )}

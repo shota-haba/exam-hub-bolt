@@ -235,7 +235,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
           <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
           <p className="text-muted-foreground mb-6">選択した学習モードに該当する設問が見つかりませんでした</p>
           <Button asChild>
-            <Link href="/exams">試験管理に戻る</Link>
+            <Link href="/exams">Session</Link>
           </Button>
         </div>
       </div>

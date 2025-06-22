@@ -11,7 +11,7 @@ interface FileDropzoneProps {
   className?: string
 }
 
-export function FileDropzone({ onFileAccepted, disabled = false, className }: FileDropzoneProps) {
+export function FileDropzone({ onFileAccepted, disabled, className }: FileDropzoneProps) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       onFileAccepted(acceptedFiles[0])
@@ -38,12 +38,19 @@ export function FileDropzone({ onFileAccepted, disabled = false, className }: Fi
       )}
     >
       <input {...getInputProps()} />
-      <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-      <p className="text-sm text-muted-foreground">
-        {isDragActive
-          ? "ファイルをドロップしてください"
-          : "JSONファイルをドラッグ&ドロップまたはクリックして選択"}
-      </p>
+      <div className="flex flex-col items-center gap-2">
+        <Upload className="h-8 w-8 text-muted-foreground" />
+        <div className="text-sm">
+          {isDragActive ? (
+            <p>ファイルをドロップしてください</p>
+          ) : (
+            <div>
+              <p className="font-medium">JSONファイルをドラッグ&ドロップ</p>
+              <p className="text-muted-foreground">またはクリックして選択</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

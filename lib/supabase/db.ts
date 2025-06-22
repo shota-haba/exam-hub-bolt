@@ -309,16 +309,22 @@ export async function getAnalyticsData(userId: string) {
     // 今日の日付
     const today = new Date().toDateString()
     
-    // 日計セッション数
-    const dailySessions = (sessionData || []).filter(session => 
+    // 日計セッション数（今日のセッション数）
+    const todaySessions = (sessionData || []).filter(session => 
       new Date(session.created_at).toDateString() === today
-    ).length
+    )
     
     // 累計セッション数
     const totalSessions = sessionData?.length || 0
     
-    // モード別統計
-    const sessionCounts = (sessionData || []).reduce((acc, session) => {
+    // モード別統計（今日のセッション）
+    const todaySessionCounts = todaySessions.reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    // モード別統計（累計）
+    const totalSessionCounts = (sessionData || []).reduce((acc, session) => {
       acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
       return acc
     }, {} as Record<string, number>)
@@ -334,13 +340,29 @@ export async function getAnalyticsData(userId: string) {
       warmupCount,
       reviewCount,
       repetitionCount,
-      dailySessions,
+      dailySessions: todaySessions.length,
       totalSessions,
       modeStats: {
-        warmup: { count: warmupCount, attempts: sessionCounts.warmup || 0 },
-        review: { count: reviewCount, attempts: sessionCounts.review || 0 },
-        repetition: { count: repetitionCount, attempts: sessionCounts.repetition || 0 },
-        comprehensive: { count: allQuestions.length, attempts: sessionCounts.comprehensive || 0 }
+        warmup: { 
+          count: warmupCount, 
+          attempts: totalSessionCounts.warmup || 0,
+          dailyAttempts: todaySessionCounts.warmup || 0
+        },
+        review: { 
+          count: reviewCount, 
+          attempts: totalSessionCounts.review || 0,
+          dailyAttempts: todaySessionCounts.review || 0
+        },
+        repetition: { 
+          count: repetitionCount, 
+          attempts: totalSessionCounts.repetition || 0,
+          dailyAttempts: todaySessionCounts.repetition || 0
+        },
+        comprehensive: { 
+          count: allQuestions.length, 
+          attempts: totalSessionCounts.comprehensive || 0,
+          dailyAttempts: todaySessionCounts.comprehensive || 0
+        }
       }
     })
   }
