@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/shared/AuthProvider'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
@@ -28,6 +28,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const progressRef = useRef<HTMLDivElement>(null)
   
   const mode = searchParams.get('mode') as SessionMode || SessionMode.Warmup
   const count = parseInt(searchParams.get('count') || '10')
@@ -52,21 +53,39 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
 
   const currentQuestion = questions[currentQuestionIndex]
   
+  // プログレスバーのアニメーション
   useEffect(() => {
     if (!currentQuestion || isAnswered || results || timeLimit === 0) return
     
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          handleAnswer(null)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    let animationFrame: number
+    const startTime = Date.now()
+    const duration = timeLimit * 1000
     
-    return () => clearInterval(timer)
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const remaining = Math.max(timeLimit - Math.floor(elapsed / 1000), 0)
+      
+      setTimeLeft(remaining)
+      
+      if (progressRef.current) {
+        progressRef.current.style.setProperty('--progress', `${progress * 100}%`)
+      }
+      
+      if (progress < 1 && !isAnswered) {
+        animationFrame = requestAnimationFrame(animate)
+      } else if (remaining === 0) {
+        handleAnswer(null)
+      }
+    }
+    
+    animationFrame = requestAnimationFrame(animate)
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame)
+      }
+    }
   }, [currentQuestion, isAnswered, results, timeLimit])
   
   useEffect(() => {
@@ -134,63 +153,63 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   
   if (results) {
     return (
-      <div className="container">
-        <div className="page-header">
-          <h1 className="page-title">結果</h1>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">結果</h2>
         </div>
         
         <Card>
-          <CardContent className="pt-8">
-            <div className="grid grid-cols-3 gap-8 mb-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold">{results.correctCount}/{results.totalQuestions}</div>
-                <p className="text-sm text-muted-foreground mt-2">正解数</p>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-3 gap-8 mb-8 text-center">
+              <div>
+                <div className="text-2xl font-bold">{results.correctCount}/{results.totalQuestions}</div>
+                <p className="text-sm text-muted-foreground mt-1">正解数</p>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</div>
-                <p className="text-sm text-muted-foreground mt-2">正答率</p>
+              <div>
+                <div className="text-2xl font-bold">{Math.round((results.correctCount / results.totalQuestions) * 100)}%</div>
+                <p className="text-sm text-muted-foreground mt-1">正答率</p>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">{Math.round(results.timeTaken)}秒</div>
-                <p className="text-sm text-muted-foreground mt-2">所要時間</p>
+              <div>
+                <div className="text-2xl font-bold">{Math.round(results.timeTaken)}秒</div>
+                <p className="text-sm text-muted-foreground mt-1">所要時間</p>
               </div>
             </div>
             
-            <h2 className="text-2xl font-bold tracking-tight mb-6">設問レビュー</h2>
-            <div className="space-y-6">
+            <h3 className="text-lg font-semibold mb-4">設問レビュー</h3>
+            <div className="space-y-4">
               {results.questions.map((item, index) => (
-                <div key={index} className="p-6 border rounded-lg">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
-                      <div className={`w-4 h-4 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
+                      <div className={`w-3 h-3 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
                     </div>
-                    <div className="flex-1 space-y-4">
-                      <p className="font-semibold text-lg">{item.question.text}</p>
+                    <div className="flex-1 space-y-3">
+                      <p className="font-medium">{item.question.text}</p>
                       
                       <div className="space-y-2">
                         {item.question.choices.map((choice) => (
                           <div 
                             key={choice.id}
-                            className={`p-3 rounded border ${
+                            className={`p-3 rounded border text-sm ${
                               choice.isCorrect ? 'border-foreground bg-muted' :
                               choice.identifier === item.selectedAnswer && !choice.isCorrect ? 'border-destructive bg-destructive/5' :
                               'border-border'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="font-medium">{choice.identifier}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-xs">{choice.identifier}</span>
                               <span>{choice.text}</span>
-                              {choice.isCorrect && <span className="text-sm text-muted-foreground">(正解)</span>}
-                              {choice.identifier === item.selectedAnswer && !choice.isCorrect && <span className="text-sm text-destructive">(選択)</span>}
+                              {choice.isCorrect && <span className="text-xs text-muted-foreground">(正解)</span>}
+                              {choice.identifier === item.selectedAnswer && !choice.isCorrect && <span className="text-xs text-destructive">(選択)</span>}
                             </div>
                           </div>
                         ))}
                       </div>
                       
                       {item.question.explanation && (
-                        <div className="border-t pt-4">
-                          <p className="font-medium mb-2">解説</p>
-                          <p className="text-muted-foreground">{item.question.explanation}</p>
+                        <div className="border-t pt-3">
+                          <p className="font-medium text-sm mb-1">解説</p>
+                          <p className="text-sm text-muted-foreground">{item.question.explanation}</p>
                         </div>
                       )}
                     </div>
@@ -199,9 +218,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
               ))}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center pt-8">
+          <CardFooter className="flex justify-center pt-6">
             <Button asChild>
-              <Link href="/dashboard">ダッシュボード</Link>
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -211,9 +230,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   
   if (!currentQuestion) {
     return (
-      <div className="container">
+      <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex flex-col items-center justify-center py-16">
-          <h1 className="text-2xl font-bold mb-4">学習モードに設問がありません</h1>
+          <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
           <p className="text-muted-foreground mb-6">選択した学習モードに該当する設問が見つかりませんでした</p>
           <Button asChild>
             <Link href="/exams">試験管理に戻る</Link>
@@ -224,32 +243,37 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   }
   
   return (
-    <div className="container">
-      <div className="flex justify-between items-center mb-8">
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">{examSet.title}</h1>
-          <p className="text-muted-foreground mt-1">
+          <h2 className="text-2xl font-bold">{examSet.title}</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             {currentQuestionIndex + 1} / {questions.length}設問
           </p>
         </div>
         {timeLimit > 0 && (
           <div className="text-right">
-            <div className="text-2xl font-bold">{timeLeft}秒</div>
-            <p className="text-sm text-muted-foreground">残り時間</p>
+            <div className="text-xl font-bold">{timeLeft}秒</div>
+            <p className="text-xs text-muted-foreground">残り時間</p>
           </div>
         )}
       </div>
       
-      <Progress 
-        value={timeLimit > 0 ? ((timeLimit - timeLeft) / timeLimit) * 100 : (currentQuestionIndex / questions.length) * 100} 
-        className="h-2 mb-8" 
-      />
+      <div 
+        ref={progressRef}
+        className="w-full bg-secondary rounded-full h-2 overflow-hidden"
+      >
+        <div 
+          className="h-full bg-primary transition-all duration-75 ease-linear"
+          style={{ width: timeLimit > 0 ? 'var(--progress, 0%)' : `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+        />
+      </div>
       
       <Card>
-        <CardContent className="pt-8">
-          <h2 className="text-xl font-semibold mb-8">{currentQuestion.text}</h2>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-6">{currentQuestion.text}</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {currentQuestion.choices.map((choice) => (
               <div 
                 key={choice.id}
@@ -262,28 +286,28 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
                 onClick={() => !isAnswered && handleAnswer(choice.identifier)}
               >
                 <div className="flex items-start w-full">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 mr-4 ${
+                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border mr-3 text-xs font-medium ${
                     selectedAnswer === choice.identifier ? 'border-foreground bg-foreground text-background' : 'border-muted-foreground'
                   }`}>
-                    <span className="text-sm font-medium">{choice.identifier}</span>
+                    {choice.identifier}
                   </div>
-                  <div className="flex-1 text-base leading-relaxed">{choice.text}</div>
+                  <div className="flex-1 text-sm leading-relaxed">{choice.text}</div>
                 </div>
               </div>
             ))}
           </div>
           
           {isAnswered && currentQuestion.explanation && (
-            <div className="mt-8 p-6 border rounded-lg bg-muted">
-              <h3 className="font-semibold mb-3">解説</h3>
+            <div className="mt-6 p-4 border rounded-lg bg-muted">
+              <h4 className="font-medium text-sm mb-2">解説</h4>
               <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="justify-end pt-6">
+        <CardFooter className="justify-end pt-4">
           {isAnswered && (
-            <Button onClick={handleNextQuestion} size="lg">
+            <Button onClick={handleNextQuestion}>
               {currentQuestionIndex < questions.length - 1 ? '次の設問' : '結果を見る'}
             </Button>
           )}

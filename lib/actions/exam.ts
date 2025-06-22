@@ -48,6 +48,39 @@ export async function importExamAction(formData: FormData) {
   }
 }
 
+export async function updateExamAction(examId: string, data: { title: string; data: any }) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: '認証が必要です' }
+    }
+
+    const { error } = await supabase
+      .from('exam_sets')
+      .update({
+        title: data.title,
+        data: data.data,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', examId)
+      .eq('user_id', user.id)
+
+    if (error) throw error
+    
+    revalidatePath('/exams')
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error) {
+    console.error('Update exam error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    }
+  }
+}
+
 export async function importSharedExamAction(examId: string) {
   try {
     const supabase = await createClient()

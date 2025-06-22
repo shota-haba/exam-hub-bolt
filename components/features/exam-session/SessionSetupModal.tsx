@@ -64,7 +64,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                 const newMaxQuestions = modeStats[value as SessionMode]?.count || 0
                 setQuestionCount([Math.min(questionCount[0], newMaxQuestions)])
               }}
-              className="mt-3 space-y-3"
+              className="mt-3 space-y-2"
             >
               {Object.entries(modeLabels).map(([mode, label]) => {
                 const count = modeStats[mode as SessionMode]?.count || 0
@@ -79,11 +79,11 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                     />
                     <Label 
                       htmlFor={mode} 
-                      className={`flex-1 cursor-pointer ${isDisabled ? 'opacity-50' : ''}`}
+                      className={`flex-1 cursor-pointer text-sm ${isDisabled ? 'opacity-50' : ''}`}
                     >
                       <div className="flex justify-between items-center">
                         <span>{label}</span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {count}設問
                         </span>
                       </div>
@@ -104,7 +104,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               max={maxSliderQuestions}
               min={minQuestions}
               step={1}
-              className="mt-3"
+              className="mt-2"
               disabled={isStartDisabled}
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -123,7 +123,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               max={120}
               min={15}
               step={15}
-              className="mt-3"
+              className="mt-2"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>15秒</span>
@@ -131,13 +131,14 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={onClose} size="sm">
               キャンセル
             </Button>
             <Button 
               onClick={handleStart}
               disabled={isStartDisabled}
+              size="sm"
             >
               開始
             </Button>

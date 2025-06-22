@@ -40,9 +40,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
+        <div className="mr-4 flex">
           <Link href={user ? "/dashboard" : "/"} className="mr-6 flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block">Exam Hub</span>
+            <span className="font-bold">Exam Hub</span>
           </Link>
           {user && (
             <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -53,7 +53,7 @@ export default function Header() {
                   isActive("/dashboard") ? "text-foreground" : "text-foreground/60"
                 )}
               >
-                ダッシュボード
+                Dashboard
               </Link>
               <Link 
                 href="/exams" 
@@ -77,7 +77,7 @@ export default function Header() {
           )}
         </div>
         
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center justify-end space-x-2">
           {loading ? (
             <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
           ) : !user ? (
@@ -93,7 +93,7 @@ export default function Header() {
                       src={user.user_metadata?.avatar_url || ''} 
                       alt={user.user_metadata?.name || 'User'} 
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs">
                       {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -102,7 +102,7 @@ export default function Header() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">
+                    <p className="text-sm font-medium">
                       {user.user_metadata?.name || 'User'}
                     </p>
                     <p className="w-[200px] truncate text-xs text-muted-foreground">
