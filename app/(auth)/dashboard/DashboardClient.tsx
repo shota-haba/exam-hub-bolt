@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
@@ -27,6 +28,7 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ analytics }: DashboardClientProps) {
+  const router = useRouter()
   const [dailyTime, setDailyTime] = useState(0)
   const [totalTime, setTotalTime] = useState(0)
 
@@ -39,6 +41,16 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
 
     return () => clearInterval(timer)
   }, [])
+
+  // セッション完了後の画面更新
+  useEffect(() => {
+    const handleFocus = () => {
+      router.refresh()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [router])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)

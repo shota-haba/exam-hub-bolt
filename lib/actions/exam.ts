@@ -57,7 +57,6 @@ export async function updateExamAction(examId: string, data: { title: string; da
       return { success: false, error: '認証が必要です' }
     }
 
-    // updated_atカラムを除外して更新
     const { error } = await supabase
       .from('exam_sets')
       .update({
@@ -137,7 +136,7 @@ export async function toggleExamLikeAction(examId: string, hasLiked: boolean) {
       return { success: false, error: '認証が必要です' }
     }
 
-    await toggleExamLike(examId, user.id, hasLiked)
+    await toggleExamLike(examId, user.id)
     
     revalidatePath('/browse')
     return { success: true }
@@ -170,8 +169,19 @@ export async function saveSessionResultAction(sessionData: SessionSaveData) {
       sessionData.questionsData
     )
 
-    // ユーザー進捗を更新
+    // ユーザー進捗を更新（累計回数を正しく処理）
     for (const questionResult of sessionData.questionsData) {
+      // 既存の進捗を取得
+      const { data: existingProgress } = await supabase
+        .from('user_progress')
+        .select('attempt_count')
+        .eq('user_id', user.id)
+        .eq('question_id', questionResult.question.id)
+        .eq('exam_set_id', sessionData.examId)
+        .single()
+
+      const currentAttemptCount = existingProgress?.attempt_count || 0
+
       const { error } = await supabase
         .from('user_progress')
         .upsert({
@@ -179,7 +189,7 @@ export async function saveSessionResultAction(sessionData: SessionSaveData) {
           question_id: questionResult.question.id,
           exam_set_id: sessionData.examId,
           last_result: questionResult.isCorrect,
-          attempt_count: 1,
+          attempt_count: currentAttemptCount + 1,
           last_attempted: new Date().toISOString()
         }, {
           onConflict: 'user_id,question_id'

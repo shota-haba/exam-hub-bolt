@@ -222,6 +222,99 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
 }
 
 /**
+ * アナリティクスデータを取得（ダッシュボード用）
+ */
+export async function getAnalyticsData(userId: string) {
+  const supabase = await createClient()
+  
+  const { data: exams } = await supabase
+    .from('exam_sets')
+    .select('id, title, data')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  
+  if (!exams) return []
+  
+  const analyticsData = []
+  
+  for (const exam of exams) {
+    const allQuestions = exam.data?.questions || []
+    
+    const { data: progressData } = await supabase
+      .from('user_progress')
+      .select('question_id, last_result')
+      .eq('user_id', userId)
+      .eq('exam_set_id', exam.id)
+    
+    const progressMap = new Map(
+      (progressData || []).map(p => [p.question_id, p.last_result])
+    )
+    
+    const { data: sessionData } = await supabase
+      .from('session_results')
+      .select('session_mode, created_at')
+      .eq('user_id', userId)
+      .eq('exam_set_id', exam.id)
+    
+    const today = new Date().toDateString()
+    
+    const todaySessions = (sessionData || []).filter(session => 
+      new Date(session.created_at).toDateString() === today
+    )
+    
+    const totalSessions = sessionData?.length || 0
+    
+    const todaySessionCounts = todaySessions.reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const totalSessionCounts = (sessionData || []).reduce((acc, session) => {
+      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
+    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
+    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
+    
+    analyticsData.push({
+      examId: exam.id,
+      examTitle: exam.title,
+      warmupCount,
+      reviewCount,
+      repetitionCount,
+      dailySessions: todaySessions.length,
+      totalSessions,
+      modeStats: {
+        warmup: { 
+          count: warmupCount, 
+          attempts: totalSessionCounts.warmup || 0,
+          dailyAttempts: todaySessionCounts.warmup || 0
+        },
+        review: { 
+          count: reviewCount, 
+          attempts: totalSessionCounts.review || 0,
+          dailyAttempts: todaySessionCounts.review || 0
+        },
+        repetition: { 
+          count: repetitionCount, 
+          attempts: totalSessionCounts.repetition || 0,
+          dailyAttempts: todaySessionCounts.repetition || 0
+        },
+        comprehensive: { 
+          count: allQuestions.length, 
+          attempts: totalSessionCounts.comprehensive || 0,
+          dailyAttempts: todaySessionCounts.comprehensive || 0
+        }
+      }
+    })
+  }
+  
+  return analyticsData
+}
+
+/**
  * ダッシュボード統計を取得
  */
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
@@ -269,108 +362,6 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
 }
 
 /**
- * アナリティクスデータを取得（ダッシュボード用）
- */
-export async function getAnalyticsData(userId: string) {
-  const supabase = await createClient()
-  
-  // 試験一覧を取得
-  const { data: exams } = await supabase
-    .from('exam_sets')
-    .select('id, title, data')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-  
-  if (!exams) return []
-  
-  const analyticsData = []
-  
-  for (const exam of exams) {
-    const allQuestions = exam.data?.questions || []
-    
-    // 進捗データを取得
-    const { data: progressData } = await supabase
-      .from('user_progress')
-      .select('question_id, last_result')
-      .eq('user_id', userId)
-      .eq('exam_set_id', exam.id)
-    
-    const progressMap = new Map(
-      (progressData || []).map(p => [p.question_id, p.last_result])
-    )
-    
-    // セッションデータを取得
-    const { data: sessionData } = await supabase
-      .from('session_results')
-      .select('session_mode, created_at')
-      .eq('user_id', userId)
-      .eq('exam_set_id', exam.id)
-    
-    // 今日の日付
-    const today = new Date().toDateString()
-    
-    // 日計セッション数（今日のセッション数）
-    const todaySessions = (sessionData || []).filter(session => 
-      new Date(session.created_at).toDateString() === today
-    )
-    
-    // 累計セッション数
-    const totalSessions = sessionData?.length || 0
-    
-    // モード別統計（今日のセッション）
-    const todaySessionCounts = todaySessions.reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    // モード別統計（累計）
-    const totalSessionCounts = (sessionData || []).reduce((acc, session) => {
-      acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    // KPI計算
-    const warmupCount = allQuestions.filter(q => !progressMap.has(q.id)).length
-    const reviewCount = allQuestions.filter(q => progressMap.get(q.id) === false).length
-    const repetitionCount = allQuestions.filter(q => progressMap.get(q.id) === true).length
-    
-    analyticsData.push({
-      examId: exam.id,
-      examTitle: exam.title,
-      warmupCount,
-      reviewCount,
-      repetitionCount,
-      dailySessions: todaySessions.length,
-      totalSessions,
-      modeStats: {
-        warmup: { 
-          count: warmupCount, 
-          attempts: totalSessionCounts.warmup || 0,
-          dailyAttempts: todaySessionCounts.warmup || 0
-        },
-        review: { 
-          count: reviewCount, 
-          attempts: totalSessionCounts.review || 0,
-          dailyAttempts: todaySessionCounts.review || 0
-        },
-        repetition: { 
-          count: repetitionCount, 
-          attempts: totalSessionCounts.repetition || 0,
-          dailyAttempts: todaySessionCounts.repetition || 0
-        },
-        comprehensive: { 
-          count: allQuestions.length, 
-          attempts: totalSessionCounts.comprehensive || 0,
-          dailyAttempts: todaySessionCounts.comprehensive || 0
-        }
-      }
-    })
-  }
-  
-  return analyticsData
-}
-
-/**
  * 試験をインポート
  */
 export async function importExamSet(
@@ -405,7 +396,6 @@ export async function importSharedExam(
 ): Promise<ExamSet> {
   const supabase = await createClient()
   
-  // 元の試験データを取得
   const { data: originalExam, error: fetchError } = await supabase
     .from('exam_sets')
     .select('title, data')
@@ -415,7 +405,6 @@ export async function importSharedExam(
   
   if (fetchError || !originalExam) throw new Error('共有試験が見つかりません')
   
-  // 新しい試験として作成
   const { data, error } = await supabase
     .from('exam_sets')
     .insert({
@@ -452,40 +441,26 @@ export async function updateExamShared(
 }
 
 /**
- * 試験のいいね状態を切り替え
+ * 試験のいいね状態を切り替え、新しいいいね数と状態を返す (RPC)
  */
 export async function toggleExamLike(
   examId: string, 
-  userId: string, 
-  hasLiked: boolean
-): Promise<void> {
+  userId: string
+): Promise<{ isLiked: boolean; likesCount: number }> {
   const supabase = await createClient()
   
-  if (hasLiked) {
-    const { error: deleteError } = await supabase
-      .from('exam_likes')
-      .delete()
-      .eq('exam_id', examId)
-      .eq('user_id', userId)
-    
-    if (deleteError) throw deleteError
-    
-    const { error: updateError } = await supabase
-      .rpc('decrement_likes_count', { exam_id: examId })
-    
-    if (updateError) throw updateError
-  } else {
-    const { error: insertError } = await supabase
-      .from('exam_likes')
-      .insert({ exam_id: examId, user_id: userId })
-    
-    if (insertError) throw insertError
-    
-    const { error: updateError } = await supabase
-      .rpc('increment_likes_count', { exam_id: examId })
-    
-    if (updateError) throw updateError
+  const { data, error } = await supabase
+    .rpc('toggle_exam_like_and_update_count', { 
+      p_exam_id: examId, 
+      p_user_id: userId 
+    })
+  
+  if (error) {
+    console.error('Toggle like RPC error:', error)
+    throw error
   }
+  
+  return data
 }
 
 /**
