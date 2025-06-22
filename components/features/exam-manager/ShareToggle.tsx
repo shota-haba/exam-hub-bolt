@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { updateExamSharedAction } from '@/actions/exam'
+import { updateExamSharedAction } from '@/lib/actions/exam'
 
 interface ShareToggleProps {
   examId: string

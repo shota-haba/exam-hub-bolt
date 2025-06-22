@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { SessionMode, Question, QuestionResult, ExamSet } from '@/lib/types/index'
-import { saveSessionResultAction } from '@/actions/exam'
+import { saveSessionResultAction } from '@/lib/actions/exam'
 import Link from 'next/link'
 
 type SessionResults = {

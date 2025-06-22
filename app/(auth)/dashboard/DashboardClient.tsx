@@ -1,12 +1,10 @@
 'use client'
 
-import { useAuth } from '@/components/shared/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { getAnalyticsData } from '@/lib/supabase/db'
+import { useState } from 'react'
 import { SessionSetupModal } from '@/components/features/exam-session/SessionSetupModal'
 import { ExamModeStats } from '@/lib/types'
 
@@ -21,10 +19,11 @@ interface AnalyticsRow {
   modeStats: ExamModeStats
 }
 
-export default function DashboardClient() {
-  const { user } = useAuth()
-  const [analytics, setAnalytics] = useState<AnalyticsRow[]>([])
-  const [loading, setLoading] = useState(true)
+interface DashboardClientProps {
+  analytics: AnalyticsRow[]
+}
+
+export default function DashboardClient({ analytics }: DashboardClientProps) {
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
   const [selectedExamModeStats, setSelectedExamModeStats] = useState<ExamModeStats>({
     warmup: { count: 0, attempts: 0 },
@@ -33,38 +32,12 @@ export default function DashboardClient() {
     comprehensive: { count: 0, attempts: 0 }
   })
 
-  useEffect(() => {
-    if (user) {
-      loadAnalytics()
-    }
-  }, [user])
-
-  const loadAnalytics = async () => {
-    try {
-      const data = await getAnalyticsData(user?.id!)
-      setAnalytics(data)
-    } catch (error) {
-      console.error('Analytics data load error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleStartSession = (examId: string) => {
     const exam = analytics.find(e => e.examId === examId)
     if (exam) {
       setSelectedExamId(examId)
       setSelectedExamModeStats(exam.modeStats)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 bg-muted rounded animate-pulse" />
-        <div className="h-64 bg-muted rounded animate-pulse" />
-      </div>
-    )
   }
 
   return (

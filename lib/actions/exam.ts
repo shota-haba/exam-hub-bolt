@@ -1,3 +1,5 @@
+'use server'
+
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -35,6 +37,7 @@ export async function importExamAction(formData: FormData) {
     await importExamSet(user.id, transformedData.title, transformedData)
     
     revalidatePath('/exams')
+    revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
     console.error('Import error:', error)
@@ -51,13 +54,14 @@ export async function importSharedExamAction(examId: string) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      redirect('/login')
+      redirect('/dashboard')
     }
 
     await importSharedExam(user.id, examId)
     
     revalidatePath('/exams')
     revalidatePath('/browse')
+    revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
     console.error('Import shared exam error:', error)
@@ -170,7 +174,7 @@ export async function deleteExamAction(examId: string) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      redirect('/login')
+      redirect('/dashboard')
     }
 
     await deleteExamSet(examId, user.id)

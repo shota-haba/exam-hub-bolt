@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Heart } from 'lucide-react'
-import { toggleExamLikeAction } from '@/actions/exam'
+import { toggleExamLikeAction } from '@/lib/actions/exam'
 
 interface LikeButtonProps {
   examId: string

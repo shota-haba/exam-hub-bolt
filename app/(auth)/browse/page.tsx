@@ -3,12 +3,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
 import { getSharedExams } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
-import { importSharedExamAction } from '@/actions/exam'
+import { importSharedExamAction } from '@/lib/actions/exam'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -40,21 +39,6 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         <Button variant="outline" asChild>
           <Link href="/dashboard">ダッシュボード</Link>
         </Button>
-      </div>
-
-      <div className="flex gap-4">
-        <Input 
-          placeholder="試験を検索..." 
-          defaultValue={search}
-          className="max-w-sm"
-        />
-        <select 
-          defaultValue={sort || 'newest'}
-          className="px-3 py-2 border rounded-md"
-        >
-          <option value="newest">新着順</option>
-          <option value="likes">人気順</option>
-        </select>
       </div>
       
       <div>

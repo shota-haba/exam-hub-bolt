@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileDropzone } from '@/components/ui/file-dropzone'
-import { importExamAction } from '@/actions/exam'
+import { importExamAction } from '@/lib/actions/exam'
 import { useToast } from '@/hooks/use-toast'
 
 export function ExamImport() {

@@ -15,7 +15,7 @@ import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
 import { getUserExams, getExamProgress } from '@/lib/supabase/db'
 import { createClient } from '@/lib/supabase/server'
 import { ExamSet } from '@/lib/types'
-import { deleteExamAction } from '@/actions/exam'
+import { deleteExamAction } from '@/lib/actions/exam'
 
 export default async function ExamsPage() {
   const supabase = await createClient()
