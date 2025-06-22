@@ -34,7 +34,8 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   const count = parseInt(searchParams.get('count') || '10')
   const timeLimit = parseInt(searchParams.get('time') || '30')
   
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions)
+  // 重要: 初期問題リストを固定し、親からのプロップ変更の影響を受けないようにする
+  const [questions] = useState<Question[]>(initialQuestions)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
@@ -151,6 +152,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
     }
   }
   
+  // 結果が設定されている場合は、問題リストが空でも結果画面を表示
   if (results) {
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -233,7 +235,9 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex flex-col items-center justify-center py-16">
           <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
-          <p className="text-muted-foreground mb-6">選択した学習モードに該当する設問が見つかりませんでした</p>
+          <p className="text-muted-foreground mb-6 text-center">
+            選択した学習モードに該当する設問が見つかりませんでした。
+          </p>
           <Button asChild>
             <Link href="/exams">Session</Link>
           </Button>

@@ -32,11 +32,33 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
   const [dailyTime, setDailyTime] = useState(0)
   const [totalTime, setTotalTime] = useState(0)
 
-  // リアルタイムタイマー
+  // 滞在時間の永続化とリアルタイムカウンター
   useEffect(() => {
+    // 初期化: localStorageから累計時間を読み込み
+    const savedTotalTime = localStorage.getItem('examhub_total_time')
+    if (savedTotalTime) {
+      setTotalTime(parseInt(savedTotalTime, 10))
+    }
+
+    // 日計時間の初期化（今日の日付をキーとして使用）
+    const today = new Date().toDateString()
+    const savedDailyTime = localStorage.getItem(`examhub_daily_time_${today}`)
+    if (savedDailyTime) {
+      setDailyTime(parseInt(savedDailyTime, 10))
+    }
+
+    // リアルタイムタイマー
     const timer = setInterval(() => {
-      setDailyTime(prev => prev + 1)
-      setTotalTime(prev => prev + 1)
+      setDailyTime(prev => {
+        const newDailyTime = prev + 1
+        localStorage.setItem(`examhub_daily_time_${today}`, newDailyTime.toString())
+        return newDailyTime
+      })
+      setTotalTime(prev => {
+        const newTotalTime = prev + 1
+        localStorage.setItem('examhub_total_time', newTotalTime.toString())
+        return newTotalTime
+      })
     }, 1000)
 
     return () => clearInterval(timer)

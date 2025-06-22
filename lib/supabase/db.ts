@@ -237,7 +237,10 @@ export async function getAnalyticsData(userId: string) {
     .eq('user_id', userId)
     .in('exam_set_id', examIds)
   
-  const today = new Date().toDateString()
+  // タイムゾーンに依存しない堅牢な日付比較
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString()
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString()
   
   const analyticsData = []
   
@@ -248,9 +251,11 @@ export async function getAnalyticsData(userId: string) {
     
     const progressMap = new Map(examProgress.map(p => [p.question_id, p.last_result]))
     
-    const todaySessions = examSessions.filter(session => 
-      new Date(session.created_at).toDateString() === today
-    )
+    // 今日のセッションを正確にフィルタリング
+    const todaySessions = examSessions.filter(session => {
+      const sessionDate = new Date(session.created_at).toISOString()
+      return sessionDate >= todayStart && sessionDate <= todayEnd
+    })
     
     const todaySessionCounts = todaySessions.reduce((acc, session) => {
       acc[session.session_mode] = (acc[session.session_mode] || 0) + 1
