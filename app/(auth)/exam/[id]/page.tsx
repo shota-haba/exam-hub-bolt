@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getQuestionsForSession } from '@/lib/supabase/db'
 import { SessionMode } from '@/lib/types'
+import { AuthGuard } from '@/components/shared/AuthGuard'
 import ExamSession from './ExamSession'
 
 interface ExamPageProps {
@@ -14,6 +15,14 @@ interface ExamPageProps {
 }
 
 export default async function ExamPage({ params, searchParams }: ExamPageProps) {
+  return (
+    <AuthGuard>
+      <ExamContent params={params} searchParams={searchParams} />
+    </AuthGuard>
+  )
+}
+
+async function ExamContent({ params, searchParams }: ExamPageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   

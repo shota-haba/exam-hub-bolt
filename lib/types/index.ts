@@ -37,15 +37,14 @@ export interface Question {
   choices: Choice[]
 }
 
-// 試験セット
-export interface ExamSet {
+// 基本試験セット型
+export interface BaseExamSet {
   id: string
   title: string
   user_id: string
   created_at: string
   is_shared: boolean
   likes_count: number
-  isLiked?: boolean // UI用フラグ
   data: {
     questions: Question[]
     tags?: Array<{
@@ -53,6 +52,11 @@ export interface ExamSet {
       値: string
     }>
   }
+}
+
+// UI用拡張試験セット型（いいね状態を含む）
+export interface ExamSet extends BaseExamSet {
+  isLiked?: boolean // UI用フラグ（共有試験表示時のみ使用）
 }
 
 // ユーザー進捗
@@ -150,4 +154,12 @@ export interface ExamModeStats {
   review: { count: number; attempts: number };
   repetition: { count: number; attempts: number };
   comprehensive: { count: number; attempts: number };
+}
+
+// ダッシュボード用拡張統計（日計を含む）
+export interface ExtendedExamModeStats extends ExamModeStats {
+  warmup: { count: number; attempts: number; dailyAttempts: number };
+  review: { count: number; attempts: number; dailyAttempts: number };
+  repetition: { count: number; attempts: number; dailyAttempts: number };
+  comprehensive: { count: number; attempts: number; dailyAttempts: number };
 }

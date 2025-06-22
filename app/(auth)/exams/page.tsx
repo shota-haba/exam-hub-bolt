@@ -14,72 +14,75 @@ import { ExamImport } from '@/components/features/exam-manager/ExamImport'
 import { ShareToggle } from '@/components/features/exam-manager/ShareToggle'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
 import { getUserExams, getBulkExamStatsByMode } from '@/lib/supabase/db'
-import { createClient } from '@/lib/supabase/server'
 import { ExamSet, ExamModeStats } from '@/lib/types'
 import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamButton'
 import { ExportExamButton } from '@/components/features/exam-manager/ExportExamButton'
+import { AuthGuard } from '@/components/shared/AuthGuard'
 
 export default async function ExamsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return null
-  }
+  return (
+    <AuthGuard>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">Session</h2>
+        </div>
 
-  const exams = await getUserExams(user.id)
+        <div className="space-y-4">
+          <ExamImport />
+          
+          <div>
+            <h3 className="text-lg font-medium mb-4">試験一覧</h3>
+            
+            <Suspense fallback={
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
+                ))}
+              </div>
+            }>
+              <ExamsList />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+    </AuthGuard>
+  )
+}
+
+async function ExamsList() {
+  const exams = await getUserExams()
   
   // N+1問題を解決：全試験の統計を一括取得
   const examIds = exams.map(exam => exam.id)
-  const statsMap = await getBulkExamStatsByMode(examIds, user.id)
+  const statsMap = await getBulkExamStatsByMode(examIds)
+
+  if (exams.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold">試験データなし</h3>
+            <p className="text-sm text-muted-foreground">上記のフォームから試験データをインポートしてください</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Session</h2>
-      </div>
-
-      <div className="space-y-4">
-        <ExamImport />
-        
-        <div>
-          <h3 className="text-lg font-medium mb-4">試験一覧</h3>
-          
-          <Suspense fallback={
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
-              ))}
-            </div>
-          }>
-            {exams.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {exams.map((exam) => (
-                  <ExamManagementCard 
-                    key={exam.id} 
-                    exam={exam} 
-                    modeStats={statsMap.get(exam.id) || {
-                      warmup: { count: 0, attempts: 0 },
-                      review: { count: 0, attempts: 0 },
-                      repetition: { count: 0, attempts: 0 },
-                      comprehensive: { count: 0, attempts: 0 }
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <div className="text-center space-y-2">
-                    <h3 className="text-lg font-semibold">試験データなし</h3>
-                    <p className="text-sm text-muted-foreground">上記のフォームから試験データをインポートしてください</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </Suspense>
-        </div>
-      </div>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {exams.map((exam) => (
+        <ExamManagementCard 
+          key={exam.id} 
+          exam={exam} 
+          modeStats={statsMap.get(exam.id) || {
+            warmup: { count: 0, attempts: 0 },
+            review: { count: 0, attempts: 0 },
+            repetition: { count: 0, attempts: 0 },
+            comprehensive: { count: 0, attempts: 0 }
+          }}
+        />
+      ))}
     </div>
   )
 }

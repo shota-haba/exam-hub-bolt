@@ -6,15 +6,26 @@ import { ExamSet, DashboardStats, SharedExamsOptions, UserProgress, SessionResul
  */
 
 /**
+ * 現在のユーザーIDを取得するヘルパー関数
+ */
+async function getCurrentUserId(): Promise<string> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('認証が必要です')
+  return user.id
+}
+
+/**
  * ユーザーの試験一覧を取得
  */
-export async function getUserExams(userId: string): Promise<ExamSet[]> {
+export async function getUserExams(userId?: string): Promise<ExamSet[]> {
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   const { data, error } = await supabase
     .from('exam_sets')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .order('created_at', { ascending: false })
   
   if (error) throw error
@@ -25,10 +36,10 @@ export async function getUserExams(userId: string): Promise<ExamSet[]> {
  * 共有試験一覧を取得（いいね状態付き）
  */
 export async function getSharedExams(
-  userId: string, 
   options: SharedExamsOptions = {}
 ): Promise<ExamSet[]> {
   const supabase = await createClient()
+  const userId = await getCurrentUserId()
   
   let query = supabase
     .from('exam_sets')
@@ -64,14 +75,15 @@ export async function getSharedExams(
 /**
  * 単一試験セットを取得
  */
-export async function getExamSet(examId: string, userId: string): Promise<ExamSet | null> {
+export async function getExamSet(examId: string, userId?: string): Promise<ExamSet | null> {
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   const { data, error } = await supabase
     .from('exam_sets')
     .select('*')
     .eq('id', examId)
-    .or(`user_id.eq.${userId},is_shared.eq.true`)
+    .or(`user_id.eq.${targetUserId},is_shared.eq.true`)
     .single()
   
   if (error) return null
@@ -140,10 +152,11 @@ export async function getQuestionsForSession(
 /**
  * 複数試験のモード別統計を一括取得（N+1問題解決）
  */
-export async function getBulkExamStatsByMode(examIds: string[], userId: string): Promise<Map<string, ExamModeStats>> {
+export async function getBulkExamStatsByMode(examIds: string[], userId?: string): Promise<Map<string, ExamModeStats>> {
   if (examIds.length === 0) return new Map()
   
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   // 全試験の問題データを一括取得
   const { data: examSets } = await supabase
@@ -155,14 +168,14 @@ export async function getBulkExamStatsByMode(examIds: string[], userId: string):
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('exam_set_id, question_id, last_result')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .in('exam_set_id', examIds)
   
   // 全試験のセッションデータを一括取得
   const { data: sessionData } = await supabase
     .from('session_results')
     .select('exam_set_id, session_mode')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .in('exam_set_id', examIds)
   
   const statsMap = new Map<string, ExamModeStats>()
@@ -197,8 +210,9 @@ export async function getBulkExamStatsByMode(examIds: string[], userId: string):
 /**
  * 試験のモード別統計を取得（単一試験用）
  */
-export async function getExamStatsByMode(examId: string, userId: string): Promise<ExamModeStats> {
-  const statsMap = await getBulkExamStatsByMode([examId], userId)
+export async function getExamStatsByMode(examId: string, userId?: string): Promise<ExamModeStats> {
+  const targetUserId = userId || await getCurrentUserId()
+  const statsMap = await getBulkExamStatsByMode([examId], targetUserId)
   return statsMap.get(examId) || {
     warmup: { count: 0, attempts: 0 },
     review: { count: 0, attempts: 0 },
@@ -210,13 +224,14 @@ export async function getExamStatsByMode(examId: string, userId: string): Promis
 /**
  * アナリティクスデータを取得（ダッシュボード用）
  */
-export async function getAnalyticsData(userId: string) {
+export async function getAnalyticsData(userId?: string) {
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   const { data: exams } = await supabase
     .from('exam_sets')
     .select('id, title, data')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .order('created_at', { ascending: false })
   
   if (!exams) return []
@@ -227,14 +242,14 @@ export async function getAnalyticsData(userId: string) {
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('exam_set_id, question_id, last_result')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .in('exam_set_id', examIds)
   
   // 全試験のセッションデータを一括取得
   const { data: sessionData } = await supabase
     .from('session_results')
     .select('exam_set_id, session_mode, created_at')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .in('exam_set_id', examIds)
   
   // タイムゾーンに依存しない堅牢な日付比較
@@ -310,8 +325,9 @@ export async function getAnalyticsData(userId: string) {
 /**
  * 試験の進捗を取得
  */
-export async function getExamProgress(examId: string, userId: string): Promise<number> {
+export async function getExamProgress(examId: string, userId?: string): Promise<number> {
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   const { data: examSet } = await supabase
     .from('exam_sets')
@@ -326,7 +342,7 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
   const { data: progressData } = await supabase
     .from('user_progress')
     .select('question_id')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .eq('exam_set_id', examId)
   
   const answeredQuestions = progressData?.length || 0
@@ -337,13 +353,14 @@ export async function getExamProgress(examId: string, userId: string): Promise<n
 /**
  * ダッシュボード統計を取得
  */
-export async function getDashboardStats(userId: string): Promise<DashboardStats> {
+export async function getDashboardStats(userId?: string): Promise<DashboardStats> {
   const supabase = await createClient()
+  const targetUserId = userId || await getCurrentUserId()
   
   const { data: exams } = await supabase
     .from('exam_sets')
     .select('data')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
   
   const totalExams = exams?.length || 0
   const totalQuestions = exams?.reduce((sum, exam) => 
@@ -352,7 +369,7 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
   const { data: sessions } = await supabase
     .from('session_results')
     .select('start_time, end_time, score, total_questions')
-    .eq('user_id', userId)
+    .eq('user_id', targetUserId)
     .order('created_at', { ascending: false })
     .limit(10)
   

@@ -1,12 +1,21 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ExamEditForm } from '@/components/features/exam-manager/ExamEditForm'
+import { AuthGuard } from '@/components/shared/AuthGuard'
 
 interface ExamEditPageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function ExamEditPage({ params }: ExamEditPageProps) {
+  return (
+    <AuthGuard>
+      <ExamEditContent params={params} />
+    </AuthGuard>
+  )
+}
+
+async function ExamEditContent({ params }: ExamEditPageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
