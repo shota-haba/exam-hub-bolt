@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ja">
-      <body className={inter.className}>
+    <html lang="ja" className="h-full">
+      <body className={`${inter.className} h-full`}>
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
             <Header />

@@ -21,19 +21,23 @@ interface SessionSetupModalProps {
 const modeConfig = {
   [SessionMode.Warmup]: {
     label: '予習',
-    icon: BookOpen
+    icon: BookOpen,
+    description: '未学習の問題に集中'
   },
   [SessionMode.Review]: {
     label: '復習',
-    icon: Target
+    icon: Target,
+    description: '間違えた問題を重点的に'
   },
   [SessionMode.Repetition]: {
     label: '反復',
-    icon: Zap
+    icon: Zap,
+    description: '正解した問題の知識定着'
   },
   [SessionMode.Comprehensive]: {
     label: '総合',
-    icon: Trophy
+    icon: Trophy,
+    description: '全問題での実力測定'
   }
 }
 
@@ -99,15 +103,18 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                     />
                     <Label 
                       htmlFor={mode} 
-                      className={`flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer peer-disabled:opacity-50 peer-disabled:cursor-not-allowed peer-data-[state=checked]:border-foreground peer-data-[state=checked]:bg-muted/50`}
+                      className={`flex flex-col p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer peer-disabled:opacity-50 peer-disabled:cursor-not-allowed peer-data-[state=checked]:border-foreground peer-data-[state=checked]:bg-muted/50`}
                     >
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <span>{config.label}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          <span>{config.label}</span>
+                        </div>
+                        <Badge variant={count > 0 ? "secondary" : "outline"} className="ml-2">
+                          {count}
+                        </Badge>
                       </div>
-                      <Badge variant={count > 0 ? "secondary" : "outline"} className="ml-2">
-                        {count}
-                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">{config.description}</p>
                     </Label>
                   </div>
                 )
@@ -123,13 +130,13 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
             <Slider
               value={[adjustedQuestionCount]}
               onValueChange={(value) => setQuestionCount([Math.min(value[0], maxQuestions)])}
-              max={maxSliderQuestions}
-              min={minQuestions}
+              max={120}
+              min={1}
               step={1}
               disabled={isStartDisabled}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{minQuestions}問</span>
+              <span>1問</span>
               <span>{maxQuestions}問</span>
             </div>
           </div>

@@ -21,13 +21,15 @@ interface BrowsePageProps {
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <AuthGuard>
-      <div className="w-full px-2 py-4">
+      <div className="content-container">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Share</h2>
         </div>
         
         <Suspense fallback={
-          <div className="h-64 bg-muted rounded-md animate-pulse" />
+          <div className="flex items-center justify-center py-16">
+            <LoadingSpinner size="lg" />
+          </div>
         }>
           <BrowseContent searchParams={searchParams} />
         </Suspense>
@@ -57,9 +59,9 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
       {mySharedExams.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl font-semibold">共有中の試験</h3>
-          <div className="overflow-hidden rounded-md border">
+          <div className="overflow-hidden rounded-md border bg-card">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="w-[250px]">試験名</TableHead>
                   <TableHead className="text-center">設問数</TableHead>
@@ -83,7 +85,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
                   };
                   
                   return (
-                    <TableRow key={exam.id}>
+                    <TableRow key={exam.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell>
                         <div className="font-medium">{exam.title}</div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
@@ -134,9 +136,9 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
         <h3 className="text-xl font-semibold">共有試験</h3>
         
         {sharedExams.length > 0 ? (
-          <div className="overflow-hidden rounded-md border">
+          <div className="overflow-hidden rounded-md border bg-card">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="w-[250px]">試験名</TableHead>
                   <TableHead className="text-center">設問数</TableHead>
@@ -160,7 +162,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
                   };
                   
                   return (
-                    <TableRow key={exam.id}>
+                    <TableRow key={exam.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell>
                         <div className="font-medium">{exam.title}</div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
@@ -214,7 +216,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
             </Table>
           </div>
         ) : (
-          <Card className="border-dashed">
+          <Card className="border-dashed bg-card/50">
             <CardContent className="flex flex-col items-center justify-center py-8">
               <div className="text-center space-y-2">
                 <h3 className="text-lg font-semibold">共有試験なし</h3>

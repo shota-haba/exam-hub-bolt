@@ -95,7 +95,7 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
   const dailyPoints = 85
 
   return (
-    <div className="w-full px-2 py-4">
+    <div className="content-container">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Dashboard</h2>
       </div>
@@ -111,8 +111,8 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
       />
       
       {/* 滞在時間統計 */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <Card className="bg-card hover:bg-card/80 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-base font-medium">日計滞在時間</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -121,7 +121,7 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
             <div className="text-2xl font-bold tabular-nums">{formatTime(dailyTime)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card hover:bg-card/80 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-base font-medium">累計滞在時間</CardTitle>
             <Timer className="h-4 w-4 text-muted-foreground" />
@@ -137,9 +137,9 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
         <h3 className="text-xl font-semibold">試験別アナリティクス</h3>
         
         {analytics.length > 0 ? (
-          <div className="overflow-hidden rounded-md border">
+          <div className="overflow-hidden rounded-md border bg-card">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="w-[250px]">試験名</TableHead>
                   <TableHead className="text-center">予習</TableHead>
@@ -153,7 +153,7 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
               </TableHeader>
               <TableBody>
                 {analytics.map((exam) => (
-                  <TableRow key={exam.examId}>
+                  <TableRow key={exam.examId} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="font-medium">{exam.examTitle}</TableCell>
                     <TableCell className="text-center">
                       <div className="font-medium">{exam.modeStats.warmup.count}</div>
@@ -194,7 +194,7 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
             </Table>
           </div>
         ) : (
-          <Card className="border-dashed">
+          <Card className="border-dashed bg-card/50">
             <CardContent className="flex flex-col items-center justify-center py-8">
               <div className="text-center space-y-2">
                 <h3 className="text-lg font-semibold">試験データなし</h3>

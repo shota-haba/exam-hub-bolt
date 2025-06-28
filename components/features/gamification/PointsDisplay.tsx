@@ -25,9 +25,9 @@ export function PointsDisplay({
   const progressPercentage = (currentExp / (currentExp + expToNext)) * 100
 
   return (
-    <Card className={cn("border", className)}>
+    <Card className={cn("border bg-card hover:bg-card/80 transition-colors", className)}>
       <CardContent className="p-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
