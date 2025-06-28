@@ -1,12 +1,14 @@
 import { Suspense } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Calendar, Tag } from 'lucide-react'
 import { LikeButton } from '@/components/features/exam-browser/LikeButton'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
 import { getSharedExams, getUserExams, getBulkExamStatsByMode } from '@/lib/supabase/db'
 import { ExamSet, ExamModeStats } from '@/lib/types'
 import { ImportSharedExamButton } from '@/components/features/exam-browser/ImportSharedExamButton'
 import { AuthGuard } from '@/components/shared/AuthGuard'
+import { LoadingGrid } from '@/components/ui/loading-spinner'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -18,18 +20,12 @@ interface BrowsePageProps {
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <AuthGuard>
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
+      <div className="flex-1 space-y-8 p-8 pt-6">
+        <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Share</h2>
         </div>
         
-        <Suspense fallback={
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
-            ))}
-          </div>
-        }>
+        <Suspense fallback={<LoadingGrid count={6} />}>
           <BrowseContent searchParams={searchParams} />
         </Suspense>
       </div>
@@ -54,11 +50,11 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
   const statsMap = await getBulkExamStatsByMode(allExamIds)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {mySharedExams.length > 0 && (
-        <div>
-          <h3 className="text-lg font-medium mb-4">共有中の試験</h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">共有中の試験</h3>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {mySharedExams.map((exam) => (
               <MySharedExamCard 
                 key={exam.id} 
@@ -75,11 +71,11 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
         </div>
       )}
       
-      <div>
-        <h3 className="text-lg font-medium mb-4">共有試験</h3>
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">共有試験</h3>
         
         {sharedExams.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {sharedExams.map((exam) => (
               <SharedExamCard 
                 key={exam.id} 
@@ -96,7 +92,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
         ) : (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-3">
                 <h3 className="text-lg font-semibold">共有試験なし</h3>
                 <p className="text-sm text-muted-foreground">現在共有されている試験はありません</p>
               </div>
@@ -110,27 +106,51 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
 
 function MySharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
   const questionCount = exam.data?.questions?.length || 0
+  const tags = exam.data?.tags || []
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+      <CardHeader className="pb-4">
+        <div className="space-y-3">
+          <CardTitle className="text-lg font-semibold">
             {exam.title}
           </CardTitle>
-          <CardDescription className="text-xs">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-3 w-3" />
             {new Date(exam.created_at).toLocaleDateString()}
-          </CardDescription>
+          </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3 flex-1">
+      <CardContent className="space-y-4 flex-1">
+        {/* タグ情報 */}
+        {tags.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Tag className="h-3 w-3" />
+              <span>タグ</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 2).map((tag, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {tag.項目名}: {tag.値}
+                </Badge>
+              ))}
+              {tags.length > 2 && (
+                <Badge variant="outline" className="text-xs">
+                  +{tags.length - 2}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="outline" className="text-sm">
             {questionCount}設問
           </Badge>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{exam.likes_count}いいね</span>
+            <span className="text-sm text-muted-foreground">{exam.likes_count}いいね</span>
           </div>
         </div>
       </CardContent>
@@ -151,23 +171,47 @@ function MySharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamM
 
 function SharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
   const questionCount = exam.data?.questions?.length || 0
+  const tags = exam.data?.tags || []
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+      <CardHeader className="pb-4">
+        <div className="space-y-3">
+          <CardTitle className="text-lg font-semibold">
             {exam.title}
           </CardTitle>
-          <CardDescription className="text-xs">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-3 w-3" />
             {new Date(exam.created_at).toLocaleDateString()}
-          </CardDescription>
+          </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3 flex-1">
+      <CardContent className="space-y-4 flex-1">
+        {/* タグ情報 */}
+        {tags.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Tag className="h-3 w-3" />
+              <span>タグ</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 2).map((tag, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {tag.項目名}: {tag.値}
+                </Badge>
+              ))}
+              {tags.length > 2 && (
+                <Badge variant="outline" className="text-xs">
+                  +{tags.length - 2}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="outline" className="text-sm">
             {questionCount}設問
           </Badge>
           <LikeButton 
@@ -178,7 +222,7 @@ function SharedExamCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamMod
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0 flex gap-2">
+      <CardFooter className="pt-0 flex gap-3">
         <ImportSharedExamButton examId={exam.id} />
         <SessionStartButton 
           examId={exam.id} 

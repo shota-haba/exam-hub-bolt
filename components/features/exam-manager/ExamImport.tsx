@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FileDropzone } from '@/components/ui/file-dropzone'
 import { importExamAction } from '@/lib/actions/exam'
 import { useToast } from '@/hooks/use-toast'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Upload } from 'lucide-react'
 
 export function ExamImport() {
   const [isPending, startTransition] = useTransition()
@@ -35,8 +37,11 @@ export function ExamImport() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">試験データインポート</CardTitle>
-        <CardDescription className="text-sm">
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          試験データインポート
+        </CardTitle>
+        <CardDescription>
           JSON形式の試験データをアップロード
         </CardDescription>
       </CardHeader>
@@ -46,9 +51,9 @@ export function ExamImport() {
           disabled={isPending}
         />
         {isPending && (
-          <div className="mt-3 text-center">
-            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="animate-spin rounded-full h-3 w-3 border-b border-foreground"></div>
+          <div className="mt-4 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LoadingSpinner size="sm" />
               処理中...
             </div>
           </div>
