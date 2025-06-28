@@ -22,26 +22,22 @@ const modeConfig = {
   [SessionMode.Warmup]: {
     label: '予習',
     icon: BookOpen,
-    description: '未学習の問題に集中',
-    color: 'bg-blue-100 text-blue-700'
+    description: '未学習の問題に集中'
   },
   [SessionMode.Review]: {
     label: '復習',
     icon: Target,
-    description: '間違えた問題を重点復習',
-    color: 'bg-orange-100 text-orange-700'
+    description: '間違えた問題を重点復習'
   },
   [SessionMode.Repetition]: {
     label: '反復',
     icon: Zap,
-    description: '正解した問題の知識定着',
-    color: 'bg-green-100 text-green-700'
+    description: '正解した問題の知識定着'
   },
   [SessionMode.Comprehensive]: {
     label: '総合',
     icon: Trophy,
-    description: '全問題での実力測定',
-    color: 'bg-purple-100 text-purple-700'
+    description: '全問題での実力測定'
   }
 }
 
@@ -110,7 +106,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                     >
                       <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-md ${config.color}`}>
+                          <div className="p-2 rounded-md bg-muted">
                             <Icon className="h-4 w-4" />
                           </div>
                           <div>
@@ -158,12 +154,12 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               value={timePerQuestion}
               onValueChange={setTimePerQuestion}
               max={120}
-              min={15}
+              min={1}
               step={1}
               className="py-4"
             />
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>15秒</span>
+              <span>1秒</span>
               <span>120秒</span>
             </div>
           </div>

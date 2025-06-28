@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { BookOpen } from 'lucide-react'
 
 export default function Header() {
   const { user, signInWithGoogle, signOut, loading } = useAuth()
@@ -39,50 +40,54 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center px-4">
-        <div className="mr-4 flex">
-          <Link href={user ? "/dashboard" : "/"} className="mr-6 flex items-center space-x-2">
+      <div className="container flex h-16 items-center">
+        <div className="mr-6 flex">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground">
+              <BookOpen className="h-4 w-4 text-background" />
+            </div>
             <span className="font-bold">Exam Hub</span>
           </Link>
-          {user && (
-            <nav className="flex items-center space-x-6 text-sm font-medium">
-              <Link 
-                href="/dashboard" 
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  isActive("/dashboard") ? "text-foreground" : "text-foreground/60"
-                )}
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href="/exams" 
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  isActive("/exams") ? "text-foreground" : "text-foreground/60"
-                )}
-              >
-                Session
-              </Link>
-              <Link 
-                href="/browse" 
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  isActive("/browse") ? "text-foreground" : "text-foreground/60"
-                )}
-              >
-                Share
-              </Link>
-            </nav>
-          )}
         </div>
+        
+        {user && (
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            <Link 
+              href="/dashboard" 
+              className={cn(
+                "transition-colors hover:text-foreground/80",
+                isActive("/dashboard") ? "text-foreground" : "text-foreground/60"
+              )}
+            >
+              Dashboard
+            </Link>
+            <Link 
+              href="/exams" 
+              className={cn(
+                "transition-colors hover:text-foreground/80",
+                isActive("/exams") ? "text-foreground" : "text-foreground/60"
+              )}
+            >
+              Session
+            </Link>
+            <Link 
+              href="/browse" 
+              className={cn(
+                "transition-colors hover:text-foreground/80",
+                isActive("/browse") ? "text-foreground" : "text-foreground/60"
+              )}
+            >
+              Share
+            </Link>
+          </nav>
+        )}
         
         <div className="flex flex-1 items-center justify-end space-x-2">
           {loading ? (
             <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
           ) : !user ? (
             <Button onClick={handleSignIn} size="sm">
-              ログイン
+              Googleでログイン
             </Button>
           ) : (
             <DropdownMenu>

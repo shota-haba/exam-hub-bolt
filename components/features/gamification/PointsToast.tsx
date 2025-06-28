@@ -31,7 +31,7 @@ export function PointsToast({ pointsEarned, onClear }: PointsToastProps) {
     toast({
       title: (
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-amber-500" />
+          <Zap className="h-4 w-4" />
           <span>+{totalPoints}pt 獲得！</span>
         </div>
       ),
