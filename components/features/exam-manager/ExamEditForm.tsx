@@ -128,7 +128,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="w-full px-2 py-4 space-y-6">
       {/* 基本情報 */}
       <Card>
         <CardHeader>
@@ -188,7 +188,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
       </Card>
 
       {/* 設問管理 */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">設問一覧</h3>
           <Button onClick={addNewQuestion} className="gap-2">
@@ -200,7 +200,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="questions">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-6">
+              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
                 {questions.map((question, questionIndex) => (
                   <Draggable key={question.id} draggableId={question.id} index={questionIndex}>
                     {(provided, snapshot) => (
@@ -209,9 +209,9 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                         {...provided.draggableProps}
                         className={`transition-shadow ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                       >
-                        <CardHeader className="pb-4">
+                        <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg flex items-center gap-3">
+                            <CardTitle className="text-base flex items-center gap-3">
                               <div {...provided.dragHandleProps} className="cursor-grab">
                                 <GripVertical className="h-5 w-5 text-muted-foreground" />
                               </div>
@@ -228,23 +228,23 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                           </div>
                         </CardHeader>
                         
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-4">
                           <div className="space-y-2">
                             <Label>設問文</Label>
                             <Textarea
                               value={question.text}
                               onChange={(e) => handleQuestionChange(questionIndex, 'text', e.target.value)}
                               placeholder="設問文を入力してください"
-                              rows={3}
+                              rows={2}
                             />
                           </div>
 
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             <Label>選択肢</Label>
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                               {question.choices.map((choice, choiceIndex) => (
-                                <div key={choice.id} className="flex items-center gap-3">
-                                  <Badge variant="outline" className="w-8 h-8 flex items-center justify-center">
+                                <div key={choice.id} className="flex items-center gap-2">
+                                  <Badge variant="outline" className="w-8 h-8 flex items-center justify-center shrink-0">
                                     {choice.identifier}
                                   </Badge>
                                   <Input
@@ -258,22 +258,21 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                             </div>
                           </div>
 
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             <Label>正解</Label>
                             <RadioGroup
                               value={question.choices.find(c => c.isCorrect)?.identifier || ''}
                               onValueChange={(value) => handleCorrectAnswerChange(questionIndex, value)}
+                              className="flex gap-4"
                             >
-                              <div className="flex gap-6">
-                                {question.choices.map((choice) => (
-                                  <div key={choice.id} className="flex items-center gap-2">
-                                    <RadioGroupItem value={choice.identifier} id={`${question.id}-${choice.identifier}`} />
-                                    <Label htmlFor={`${question.id}-${choice.identifier}`}>
-                                      {choice.identifier}
-                                    </Label>
-                                  </div>
-                                ))}
-                              </div>
+                              {question.choices.map((choice) => (
+                                <div key={choice.id} className="flex items-center gap-2">
+                                  <RadioGroupItem value={choice.identifier} id={`${question.id}-${choice.identifier}`} />
+                                  <Label htmlFor={`${question.id}-${choice.identifier}`}>
+                                    {choice.identifier}
+                                  </Label>
+                                </div>
+                              ))}
                             </RadioGroup>
                           </div>
 
@@ -299,7 +298,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
       </div>
 
       {/* 保存ボタン */}
-      <div className="flex justify-end gap-3 pt-6 border-t">
+      <div className="flex justify-end gap-3 pt-4 border-t">
         <Button variant="outline" onClick={() => router.push('/exams')}>
           キャンセル
         </Button>

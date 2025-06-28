@@ -40,8 +40,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-6 flex">
+      <div className="flex h-14 items-center px-4 w-full">
+        <div className="flex items-center">
           <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground">
               <BookOpen className="h-4 w-4 text-background" />
@@ -51,7 +51,7 @@ export default function Header() {
         </div>
         
         {user && (
-          <nav className="flex items-center space-x-6 text-sm font-medium">
+          <nav className="ml-6 flex items-center space-x-6 text-sm font-medium">
             <Link 
               href="/dashboard" 
               className={cn(
@@ -82,7 +82,7 @@ export default function Header() {
           </nav>
         )}
         
-        <div className="flex flex-1 items-center justify-end space-x-2">
+        <div className="flex flex-1 items-center justify-end">
           {loading ? (
             <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
           ) : !user ? (

@@ -25,13 +25,13 @@ export function PointsDisplay({
   const progressPercentage = (currentExp / (currentExp + expToNext)) * 100
 
   return (
-    <Card className={cn("border bg-muted/30", className)}>
-      <CardContent className="p-6">
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-3">
+    <Card className={cn("border", className)}>
+      <CardContent className="p-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
-              <span className="text-sm font-medium text-muted-foreground">レベル</span>
+              <span className="text-sm font-medium">レベル</span>
             </div>
             <div className="text-2xl font-bold">{level}</div>
             <div className="w-full bg-muted rounded-full h-2">
@@ -45,7 +45,7 @@ export function PointsDisplay({
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
@@ -64,6 +64,13 @@ export function PointsDisplay({
               <Badge variant="outline" className="font-mono">
                 {totalPoints.toLocaleString()}pt
               </Badge>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium mb-1">次のレベルまで</div>
+              <div className="text-2xl font-bold">{expToNext}pt</div>
             </div>
           </div>
         </div>

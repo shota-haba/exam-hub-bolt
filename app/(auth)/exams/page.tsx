@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Calendar, Tag } from 'lucide-react'
+import { MoreHorizontal, Calendar, Tag, Plus } from 'lucide-react'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -19,27 +19,26 @@ import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamB
 import { ExportExamButton } from '@/components/features/exam-manager/ExportExamButton'
 import { AuthGuard } from '@/components/shared/AuthGuard'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function ExamsPage() {
   return (
     <AuthGuard>
-      <div className="container mx-auto px-6 py-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Session</h2>
+      <div className="w-full px-2 py-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Session</h2>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           <ExamImport />
           
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold">試験一覧</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">試験一覧</h3>
+            </div>
             
             <Suspense fallback={
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-80 bg-muted rounded-lg animate-pulse" />
-                ))}
-              </div>
+              <div className="h-64 bg-muted rounded-md animate-pulse" />
             }>
               <ExamsList />
             </Suspense>
@@ -60,8 +59,8 @@ async function ExamsList() {
   if (exams.length === 0) {
     return (
       <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <div className="text-center space-y-3">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <div className="text-center space-y-2">
             <h3 className="text-lg font-semibold">試験データなし</h3>
             <p className="text-sm text-muted-foreground">上記のフォームから試験データをインポートしてください</p>
           </div>
@@ -71,124 +70,109 @@ async function ExamsList() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {exams.map((exam) => (
-        <ExamManagementCard 
-          key={exam.id} 
-          exam={exam} 
-          modeStats={statsMap.get(exam.id) || {
-            warmup: { count: 0, attempts: 0 },
-            review: { count: 0, attempts: 0 },
-            repetition: { count: 0, attempts: 0 },
-            comprehensive: { count: 0, attempts: 0 }
-          }}
-        />
-      ))}
+    <div className="overflow-hidden rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[250px]">試験名</TableHead>
+            <TableHead className="text-center">設問数</TableHead>
+            <TableHead className="text-center">予習</TableHead>
+            <TableHead className="text-center">復習</TableHead>
+            <TableHead className="text-center">反復</TableHead>
+            <TableHead className="text-center">総合</TableHead>
+            <TableHead className="text-center">共有</TableHead>
+            <TableHead className="w-[180px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {exams.map((exam) => {
+            const questionCount = exam.data?.questions?.length || 0;
+            const tags = exam.data?.tags || [];
+            const modeStats = statsMap.get(exam.id) || {
+              warmup: { count: 0, attempts: 0 },
+              review: { count: 0, attempts: 0 },
+              repetition: { count: 0, attempts: 0 },
+              comprehensive: { count: 0, attempts: 0 }
+            };
+            
+            return (
+              <TableRow key={exam.id}>
+                <TableCell>
+                  <div className="font-medium">{exam.title}</div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(exam.created_at).toLocaleDateString()}
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {tags.slice(0, 2).map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {tag.項目名}: {tag.値}
+                        </Badge>
+                      ))}
+                      {tags.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{tags.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">{questionCount}</TableCell>
+                <TableCell className="text-center">
+                  <div className="font-medium">{modeStats.warmup.count}</div>
+                  <div className="text-xs text-muted-foreground">{modeStats.warmup.attempts}回</div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="font-medium">{modeStats.review.count}</div>
+                  <div className="text-xs text-muted-foreground">{modeStats.review.attempts}回</div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="font-medium">{modeStats.repetition.count}</div>
+                  <div className="text-xs text-muted-foreground">{modeStats.repetition.attempts}回</div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="font-medium">{modeStats.comprehensive.count}</div>
+                  <div className="text-xs text-muted-foreground">{modeStats.comprehensive.attempts}回</div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <ShareToggle examId={exam.id} initialShared={exam.is_shared} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <SessionStartButton 
+                      examId={exam.id} 
+                      modeStats={modeStats}
+                      size="sm"
+                      className="flex-1"
+                    >
+                      開始
+                    </SessionStartButton>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/exams/${exam.id}/edit`}>編集</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <ExportExamButton exam={exam} />
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <DeleteExamButton examId={exam.id} />
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
-  )
-}
-
-function ExamManagementCard({ exam, modeStats }: { exam: ExamSet; modeStats: ExamModeStats }) {
-  const questionCount = exam.data?.questions?.length || 0
-  const tags = exam.data?.tags || []
-
-  return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div className="space-y-2 flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold truncate">
-              {exam.title}
-            </CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              {new Date(exam.created_at).toLocaleDateString()}
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/exams/${exam.id}/edit`}>編集</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <ExportExamButton exam={exam} />
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <DeleteExamButton examId={exam.id} />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6 flex-1">
-        {/* タグ情報 */}
-        {tags.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Tag className="h-3 w-3" />
-              <span>タグ</span>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {tags.slice(0, 3).map((tag, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {tag.項目名}: {tag.値}
-                </Badge>
-              ))}
-              {tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 設問数 */}
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-sm">
-            {questionCount}設問
-          </Badge>
-        </div>
-        
-        {/* モード別統計 */}
-        <div className="grid grid-cols-4 gap-2">
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-bold">{modeStats.warmup.count}</div>
-            <div className="text-xs text-muted-foreground">予習</div>
-          </div>
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-bold">{modeStats.review.count}</div>
-            <div className="text-xs text-muted-foreground">復習</div>
-          </div>
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-bold">{modeStats.repetition.count}</div>
-            <div className="text-xs text-muted-foreground">反復</div>
-          </div>
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-bold">{modeStats.comprehensive.count}</div>
-            <div className="text-xs text-muted-foreground">総合</div>
-          </div>
-        </div>
-
-        <ShareToggle examId={exam.id} initialShared={exam.is_shared} />
-      </CardContent>
-      
-      <CardFooter className="pt-0">
-        <SessionStartButton 
-          examId={exam.id} 
-          modeStats={modeStats}
-          className="w-full" 
-          size="sm"
-        >
-          セッション開始
-        </SessionStartButton>
-      </CardFooter>
-    </Card>
   )
 }

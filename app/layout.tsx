@@ -8,8 +8,8 @@ import Header from '@/components/shared/Header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Exam Hub - Smart Learning Platform',
-  description: 'Efficient exam preparation with intelligent session modes and progress tracking',
+  title: 'Exam Hub',
+  description: 'Smart Learning Platform',
 }
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 flex">{children}</main>
           </div>
           <Toaster />
         </AuthProvider>

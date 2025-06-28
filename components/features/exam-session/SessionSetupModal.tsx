@@ -21,23 +21,19 @@ interface SessionSetupModalProps {
 const modeConfig = {
   [SessionMode.Warmup]: {
     label: '予習',
-    icon: BookOpen,
-    description: '未学習の問題に集中'
+    icon: BookOpen
   },
   [SessionMode.Review]: {
     label: '復習',
-    icon: Target,
-    description: '間違えた問題を重点復習'
+    icon: Target
   },
   [SessionMode.Repetition]: {
     label: '反復',
-    icon: Zap,
-    description: '正解した問題の知識定着'
+    icon: Zap
   },
   [SessionMode.Comprehensive]: {
     label: '総合',
-    icon: Trophy,
-    description: '全問題での実力測定'
+    icon: Trophy
   }
 }
 
@@ -67,7 +63,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
@@ -75,10 +71,10 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* モード選択 */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">学習モード</Label>
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">モード</Label>
             <RadioGroup 
               value={selectedMode} 
               onValueChange={(value) => {
@@ -86,7 +82,7 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                 const newMaxQuestions = modeStats[value as SessionMode]?.count || 0
                 setQuestionCount([Math.min(questionCount[0], newMaxQuestions)])
               }}
-              className="space-y-3"
+              className="grid grid-cols-2 gap-2"
             >
               {Object.entries(modeConfig).map(([mode, config]) => {
                 const count = modeStats[mode as SessionMode]?.count || 0
@@ -94,30 +90,24 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                 const Icon = config.icon
                 
                 return (
-                  <div key={mode} className="flex items-center space-x-3">
+                  <div key={mode} className="relative">
                     <RadioGroupItem 
                       value={mode} 
                       id={mode}
                       disabled={isDisabled}
+                      className="peer sr-only"
                     />
                     <Label 
                       htmlFor={mode} 
-                      className={`flex-1 cursor-pointer ${isDisabled ? 'opacity-50' : ''}`}
+                      className={`flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer peer-disabled:opacity-50 peer-disabled:cursor-not-allowed peer-data-[state=checked]:border-foreground peer-data-[state=checked]:bg-muted/50`}
                     >
-                      <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-md bg-muted">
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{config.label}</div>
-                            <div className="text-sm text-muted-foreground">{config.description}</div>
-                          </div>
-                        </div>
-                        <Badge variant={count > 0 ? "secondary" : "outline"} className="ml-2">
-                          {count}設問
-                        </Badge>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        <span>{config.label}</span>
                       </div>
+                      <Badge variant={count > 0 ? "secondary" : "outline"} className="ml-2">
+                        {count}
+                      </Badge>
                     </Label>
                   </div>
                 )
@@ -126,8 +116,8 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
           </div>
 
           {/* 設問数設定 */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">
               設問数: {adjustedQuestionCount}問
             </Label>
             <Slider
@@ -136,18 +126,17 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               max={maxSliderQuestions}
               min={minQuestions}
               step={1}
-              className="py-4"
               disabled={isStartDisabled}
             />
-            <div className="flex justify-between text-sm text-muted-foreground">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>{minQuestions}問</span>
               <span>{maxQuestions}問</span>
             </div>
           </div>
 
           {/* 制限時間設定 */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">
               制限時間: {timePerQuestion[0]}秒/設問
             </Label>
             <Slider
@@ -156,23 +145,21 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
               max={120}
               min={1}
               step={1}
-              className="py-4"
             />
-            <div className="flex justify-between text-sm text-muted-foreground">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>1秒</span>
               <span>120秒</span>
             </div>
           </div>
 
           {/* アクションボタン */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-3 border-t">
             <Button variant="outline" onClick={onClose}>
               キャンセル
             </Button>
             <Button 
               onClick={handleStart}
               disabled={isStartDisabled}
-              className="min-w-24"
             >
               開始
             </Button>
