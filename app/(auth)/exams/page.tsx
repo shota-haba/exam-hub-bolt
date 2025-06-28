@@ -18,12 +18,12 @@ import { ExamSet, ExamModeStats } from '@/lib/types'
 import { DeleteExamButton } from '@/components/features/exam-manager/DeleteExamButton'
 import { ExportExamButton } from '@/components/features/exam-manager/ExportExamButton'
 import { AuthGuard } from '@/components/shared/AuthGuard'
-import { LoadingGrid } from '@/components/ui/loading-spinner'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export default async function ExamsPage() {
   return (
     <AuthGuard>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Session</h2>
         </div>
@@ -34,7 +34,13 @@ export default async function ExamsPage() {
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">試験一覧</h3>
             
-            <Suspense fallback={<LoadingGrid count={6} />}>
+            <Suspense fallback={
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="h-80 bg-muted rounded-lg animate-pulse" />
+                ))}
+              </div>
+            }>
               <ExamsList />
             </Suspense>
           </div>
@@ -65,7 +71,7 @@ async function ExamsList() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {exams.map((exam) => (
         <ExamManagementCard 
           key={exam.id} 

@@ -1,15 +1,15 @@
 import { Suspense } from 'react'
 import { getAnalyticsData } from '@/lib/supabase/db'
 import { AuthGuard } from '@/components/shared/AuthGuard'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
   return (
     <AuthGuard>
       <Suspense fallback={
-        <div className="flex-1 space-y-4 p-8 pt-6">
-          <div className="h-8 bg-muted rounded animate-pulse" />
-          <div className="h-64 bg-muted rounded animate-pulse" />
+        <div className="flex-1 flex items-center justify-center py-16">
+          <LoadingSpinner size="lg" />
         </div>
       }>
         <DashboardContent />

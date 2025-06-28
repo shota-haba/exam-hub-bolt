@@ -8,7 +8,7 @@ import { getSharedExams, getUserExams, getBulkExamStatsByMode } from '@/lib/supa
 import { ExamSet, ExamModeStats } from '@/lib/types'
 import { ImportSharedExamButton } from '@/components/features/exam-browser/ImportSharedExamButton'
 import { AuthGuard } from '@/components/shared/AuthGuard'
-import { LoadingGrid } from '@/components/ui/loading-spinner'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -20,12 +20,18 @@ interface BrowsePageProps {
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <AuthGuard>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Share</h2>
         </div>
         
-        <Suspense fallback={<LoadingGrid count={6} />}>
+        <Suspense fallback={
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-80 bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        }>
           <BrowseContent searchParams={searchParams} />
         </Suspense>
       </div>
@@ -54,7 +60,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
       {mySharedExams.length > 0 && (
         <div className="space-y-6">
           <h3 className="text-xl font-semibold">共有中の試験</h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mySharedExams.map((exam) => (
               <MySharedExamCard 
                 key={exam.id} 
@@ -75,7 +81,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
         <h3 className="text-xl font-semibold">共有試験</h3>
         
         {sharedExams.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sharedExams.map((exam) => (
               <SharedExamCard 
                 key={exam.id} 

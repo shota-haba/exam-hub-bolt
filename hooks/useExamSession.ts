@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SessionMode, Question, QuestionResult, ExamSet } from '@/lib/types'
 import { saveSessionResultAction } from '@/lib/actions/exam'
+import { awardSessionPointsAction } from '@/lib/actions/gamification'
 
 interface UseExamSessionProps {
   examSet: ExamSet
@@ -183,6 +184,15 @@ export function useExamSession({
         questionsData: currentSessionQuestions
       }).catch(error => {
         console.error('セッション結果の保存に失敗:', error)
+      })
+
+      // ゲーミフィケーション: ポイント付与
+      awardSessionPointsAction(
+        examSet.id,
+        correctCount,
+        questions.length
+      ).catch(error => {
+        console.error('ポイント付与に失敗:', error)
       })
       
       return currentSessionQuestions
