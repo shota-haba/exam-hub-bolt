@@ -11,7 +11,7 @@ export default function Home() {
         </div>
         <h1 className="text-4xl font-bold tracking-tight">Exam Hub</h1>
         <p className="text-muted-foreground">
-          効率的な学習管理と試験対策のためのプラットフォーム
+          社内試験管理システム
         </p>
       </div>
     </div>

@@ -85,7 +85,7 @@ export function useExamSession({
 
   const currentQuestion = questions[currentQuestionIndex]
   
-  // プログレスバーのアニメーション
+  // プログレスバーのアニメーション（減少方向に修正）
   useEffect(() => {
     if (!currentQuestion || isAnswered || results || timeLimit === 0) return
     
@@ -124,6 +124,10 @@ export function useExamSession({
   useEffect(() => {
     if (currentQuestion && !isAnswered) {
       setTimeLeft(timeLimit)
+      // 新しい問題開始時にプログレスバーを100%にリセット
+      if (progressRef.current) {
+        progressRef.current.style.setProperty('--progress', '100%')
+      }
     }
   }, [currentQuestionIndex, isAnswered, currentQuestion, timeLimit])
   
