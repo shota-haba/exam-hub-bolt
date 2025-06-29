@@ -46,14 +46,14 @@ export function PointsDisplay({
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">日計</span>
               <Badge variant="secondary" className="font-mono">
-                {dailyPoints}pt
+                {dailyPoints} Pt
               </Badge>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">累計</span>
               <Badge variant="secondary" className="font-mono">
-                {totalPoints.toLocaleString()}pt
+                {totalPoints.toLocaleString()} Pt
               </Badge>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function PointsDisplay({
           <div className="flex items-center justify-center">
             <div className="text-center bg-muted/50 p-3 rounded-lg w-full">
               <div className="text-sm font-medium mb-1">次のレベルまで</div>
-              <div className="text-2xl font-bold">{expToNext}pt</div>
+              <div className="text-2xl font-bold">{expToNext} Pt</div>
             </div>
           </div>
         </div>

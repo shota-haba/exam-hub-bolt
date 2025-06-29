@@ -180,7 +180,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
   }
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="w-full px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">試験編集</h2>
       </div>

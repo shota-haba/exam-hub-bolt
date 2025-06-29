@@ -66,15 +66,15 @@ export function ExamInfoCard({
   const tags = exam.data?.tags || []
   
   const formatDateTime = (dateString: string) => {
+    if (!dateString) return ''
     const date = new Date(dateString)
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).replace(/\//g, '/').replace(',', '')
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
   }
   
   const handleToggleLike = async () => {
@@ -105,8 +105,9 @@ export function ExamInfoCard({
     setIsPending(true)
     
     try {
-      // TODO: Implement favorite toggle action
+      // TODO: Implement favorite toggle action when backend is ready
       // await toggleExamFavoriteAction(exam.id, isFavorited)
+      console.log('Favorite toggle - backend implementation pending')
     } catch (error) {
       setIsFavorited(!isFavorited)
       console.error('Failed to toggle favorite:', error)
@@ -134,7 +135,7 @@ export function ExamInfoCard({
   const renderModeStats = (mode: string, stats: any, detailed?: DetailedModeStats) => (
     <div className="mode-stat-card">
       <div className="text-sm font-medium mb-1">{mode}</div>
-      <div className="text-lg font-bold">{stats.count}</div>
+      <div className="text-lg font-bold">{stats.count}問</div>
       <div className="text-xs text-muted-foreground mb-1">全{questionCount}問</div>
       <div className="text-xs text-muted-foreground">{stats.attempts} Pt</div>
       {detailed && (
@@ -190,14 +191,16 @@ export function ExamInfoCard({
         </div>
         
         <div className="space-y-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3" />
-            登録: {formatDateTime(exam.created_at)}
-          </div>
+          {exam.created_at && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              登録日時: {formatDateTime(exam.created_at)}
+            </div>
+          )}
           {exam.updated_at && exam.updated_at !== exam.created_at && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              更新: {formatDateTime(exam.updated_at)}
+              更新日時: {formatDateTime(exam.updated_at)}
             </div>
           )}
         </div>

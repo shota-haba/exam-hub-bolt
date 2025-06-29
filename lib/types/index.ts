@@ -43,7 +43,9 @@ export interface BaseExamSet {
   title: string
   user_id: string
   created_at: string
+  updated_at?: string
   is_shared: boolean
+  is_favorited?: boolean
   likes_count: number
   data: {
     questions: Question[]

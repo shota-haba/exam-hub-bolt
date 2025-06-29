@@ -11,7 +11,7 @@ import { ExamInfoCard } from '@/components/features/exam/ExamInfoCard'
 export default async function ExamsPage() {
   return (
     <AuthGuard>
-      <div className="px-4 py-6">
+      <div className="w-full px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Session</h2>
         </div>
