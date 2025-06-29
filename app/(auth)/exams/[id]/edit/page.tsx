@@ -36,13 +36,5 @@ async function ExamEditContent({ params }: ExamEditPageProps) {
     notFound()
   }
 
-  return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">試験編集</h2>
-      </div>
-      
-      <ExamEditForm examSet={examSet} />
-    </div>
-  )
+  return <ExamEditForm examSet={examSet} />
 }

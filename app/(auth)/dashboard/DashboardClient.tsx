@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SessionStartButton } from '@/components/shared/SessionStartButton'
 import { PointsDisplay } from '@/components/features/gamification/PointsDisplay'
 import { ExamModeStats } from '@/lib/types'
-import { Clock, Timer, Calendar, Tag } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Clock, Timer } from 'lucide-react'
+import { ExamInfoCard } from '@/components/features/exam/ExamInfoCard'
 
 interface AnalyticsRow {
   examId: string
@@ -95,7 +95,7 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
   const dailyPoints = 85
 
   return (
-    <div className="content-container">
+    <div className="px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Dashboard</h2>
       </div>
@@ -139,56 +139,28 @@ export default function DashboardClient({ analytics }: DashboardClientProps) {
         {analytics.length > 0 ? (
           <div className="card-grid">
             {analytics.map((exam) => (
-              <Card key={exam.examId} className="data-card overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-medium truncate">{exam.examTitle}</CardTitle>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>累計: {exam.totalSessions}回</span>
-                    <span className="mx-1">•</span>
-                    <span>日計: {exam.dailySessions}回</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted/50 p-3 rounded-md">
-                      <div className="text-sm font-medium mb-1">予習</div>
-                      <div className="text-lg font-bold">{exam.modeStats.warmup.count}</div>
-                      <div className="text-xs text-muted-foreground">{exam.modeStats.warmup.attempts}回</div>
-                    </div>
-                    <div className="bg-muted/50 p-3 rounded-md">
-                      <div className="text-sm font-medium mb-1">復習</div>
-                      <div className="text-lg font-bold">{exam.modeStats.review.count}</div>
-                      <div className="text-xs text-muted-foreground">{exam.modeStats.review.attempts}回</div>
-                    </div>
-                    <div className="bg-muted/50 p-3 rounded-md">
-                      <div className="text-sm font-medium mb-1">反復</div>
-                      <div className="text-lg font-bold">{exam.modeStats.repetition.count}</div>
-                      <div className="text-xs text-muted-foreground">{exam.modeStats.repetition.attempts}回</div>
-                    </div>
-                    <div className="bg-muted/50 p-3 rounded-md">
-                      <div className="text-sm font-medium mb-1">総合</div>
-                      <div className="text-lg font-bold">{exam.modeStats.comprehensive.count}</div>
-                      <div className="text-xs text-muted-foreground">{exam.modeStats.comprehensive.attempts}回</div>
-                    </div>
-                  </div>
-                </CardContent>
-                <div className="px-6 py-3 bg-muted/30 border-t">
-                  <SessionStartButton 
-                    examId={exam.examId} 
-                    modeStats={{
-                      warmup: { count: exam.modeStats.warmup.count, attempts: exam.modeStats.warmup.attempts },
-                      review: { count: exam.modeStats.review.count, attempts: exam.modeStats.review.attempts },
-                      repetition: { count: exam.modeStats.repetition.count, attempts: exam.modeStats.repetition.attempts },
-                      comprehensive: { count: exam.modeStats.comprehensive.count, attempts: exam.modeStats.comprehensive.attempts }
-                    }}
-                    size="sm"
-                    className="w-full"
-                  >
-                    開始
-                  </SessionStartButton>
-                </div>
-              </Card>
+              <ExamInfoCard
+                key={exam.examId}
+                exam={{
+                  id: exam.examId,
+                  title: exam.examTitle,
+                  user_id: '',
+                  created_at: '',
+                  is_shared: false,
+                  likes_count: 0,
+                  data: {
+                    questions: [],
+                    tags: []
+                  }
+                }}
+                modeStats={{
+                  warmup: { count: exam.modeStats.warmup.count, attempts: exam.modeStats.warmup.attempts },
+                  review: { count: exam.modeStats.review.count, attempts: exam.modeStats.review.attempts },
+                  repetition: { count: exam.modeStats.repetition.count, attempts: exam.modeStats.repetition.attempts },
+                  comprehensive: { count: exam.modeStats.comprehensive.count, attempts: exam.modeStats.comprehensive.attempts }
+                }}
+                showShareToggle={false}
+              />
             ))}
           </div>
         ) : (

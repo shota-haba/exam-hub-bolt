@@ -40,7 +40,7 @@
 
 @layer components {
   .content-container {
-    @apply w-full max-w-[1920px] mx-auto px-4 py-6;
+    @apply w-full px-4 py-6;
   }
   
   .card-grid {
@@ -57,5 +57,13 @@
   
   .section-title {
     @apply text-xl font-semibold mb-4;
+  }
+  
+  .mode-stat-card {
+    @apply bg-muted/50 p-3 rounded-md;
+  }
+  
+  .exam-card-footer {
+    @apply px-6 py-3 bg-muted/30 border-t;
   }
 }

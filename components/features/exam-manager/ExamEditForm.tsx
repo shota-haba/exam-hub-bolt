@@ -88,6 +88,58 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
     })
   }
 
+  const addChoice = (questionIndex: number) => {
+    setQuestions(prev => {
+      const updated = [...prev]
+      const question = updated[questionIndex]
+      const choiceCount = question.choices.length
+      
+      // 日本語の選択肢識別子を生成 (ア, イ, ウ, エ, オ, カ, キ, ク, ケ, コ)
+      const identifiers = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ', 'キ', 'ク', 'ケ', 'コ']
+      const nextIdentifier = identifiers[choiceCount] || `選択肢${choiceCount + 1}`
+      
+      const newChoice = {
+        id: `choice-${Date.now()}-${choiceCount + 1}`,
+        text: '',
+        identifier: nextIdentifier,
+        isCorrect: false
+      }
+      
+      updated[questionIndex] = {
+        ...question,
+        choices: [...question.choices, newChoice]
+      }
+      
+      return updated
+    })
+  }
+
+  const removeChoice = (questionIndex: number, choiceIndex: number) => {
+    setQuestions(prev => {
+      const updated = [...prev]
+      const question = updated[questionIndex]
+      
+      // 最低2つの選択肢は必要
+      if (question.choices.length <= 2) {
+        return prev
+      }
+      
+      const newChoices = question.choices.filter((_, i) => i !== choiceIndex)
+      
+      // 削除した選択肢が正解だった場合、最初の選択肢を正解にする
+      if (question.choices[choiceIndex].isCorrect && newChoices.length > 0) {
+        newChoices[0].isCorrect = true
+      }
+      
+      updated[questionIndex] = {
+        ...question,
+        choices: newChoices
+      }
+      
+      return updated
+    })
+  }
+
   const addTag = () => {
     setTags(prev => [...prev, { 項目名: '', 値: '' }])
   }
@@ -128,7 +180,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
   }
 
   return (
-    <div className="content-container space-y-6">
+    <div className="px-4 py-6 space-y-6">
       {/* 基本情報 */}
       <Card className="data-card">
         <CardHeader>
@@ -236,7 +288,18 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                           </div>
 
                           <div className="space-y-3">
-                            <Label>選択肢</Label>
+                            <div className="flex items-center justify-between">
+                              <Label>選択肢</Label>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => addChoice(questionIndex)}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                選択肢追加
+                              </Button>
+                            </div>
                             <div className="space-y-2">
                               {question.choices.map((choice, choiceIndex) => (
                                 <div key={choice.id} className="flex items-center gap-2">
@@ -249,6 +312,17 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                                     placeholder={`選択肢${choice.identifier}の内容`}
                                     className="flex-1"
                                   />
+                                  {question.choices.length > 2 && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeChoice(questionIndex, choiceIndex)}
+                                      className="h-8 w-8"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                 </div>
                               ))}
                             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
 import { SessionMode, ExamModeStats } from '@/lib/types'
-import { Clock, BookOpen, Target, Zap, Trophy } from 'lucide-react'
+import { Clock } from 'lucide-react'
 
 interface SessionSetupModalProps {
   isOpen: boolean
@@ -21,23 +21,15 @@ interface SessionSetupModalProps {
 const modeConfig = {
   [SessionMode.Warmup]: {
     label: '予習',
-    icon: BookOpen,
-    description: '未学習の問題に集中'
   },
   [SessionMode.Review]: {
     label: '復習',
-    icon: Target,
-    description: '間違えた問題を重点的に'
   },
   [SessionMode.Repetition]: {
     label: '反復',
-    icon: Zap,
-    description: '正解した問題の知識定着'
   },
   [SessionMode.Comprehensive]: {
     label: '総合',
-    icon: Trophy,
-    description: '全問題での実力測定'
   }
 }
 
@@ -50,9 +42,13 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
   const maxQuestions = modeStats[selectedMode]?.count || 0
   const isStartDisabled = maxQuestions === 0
 
-  const minQuestions = Math.min(5, maxQuestions)
-  const maxSliderQuestions = Math.max(maxQuestions, 5)
-  const adjustedQuestionCount = Math.min(questionCount[0], maxQuestions)
+  // 選択モードが変わったら、設問数スライダーの値を調整
+  useEffect(() => {
+    const newMaxQuestions = modeStats[selectedMode]?.count || 0
+    setQuestionCount([Math.min(questionCount[0], Math.max(1, newMaxQuestions))])
+  }, [selectedMode, modeStats])
+
+  const adjustedQuestionCount = Math.min(questionCount[0], maxQuestions || 1)
 
   const handleStart = () => {
     const params = new URLSearchParams({
@@ -81,17 +77,12 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
             <Label className="text-sm font-medium">モード</Label>
             <RadioGroup 
               value={selectedMode} 
-              onValueChange={(value) => {
-                setSelectedMode(value as SessionMode)
-                const newMaxQuestions = modeStats[value as SessionMode]?.count || 0
-                setQuestionCount([Math.min(questionCount[0], newMaxQuestions)])
-              }}
+              onValueChange={(value) => setSelectedMode(value as SessionMode)}
               className="grid grid-cols-2 gap-2"
             >
               {Object.entries(modeConfig).map(([mode, config]) => {
                 const count = modeStats[mode as SessionMode]?.count || 0
                 const isDisabled = count === 0
-                const Icon = config.icon
                 
                 return (
                   <div key={mode} className="relative">
@@ -106,15 +97,11 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
                       className={`flex flex-col p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer peer-disabled:opacity-50 peer-disabled:cursor-not-allowed peer-data-[state=checked]:border-foreground peer-data-[state=checked]:bg-muted/50`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          <span>{config.label}</span>
-                        </div>
+                        <span>{config.label}</span>
                         <Badge variant={count > 0 ? "secondary" : "outline"} className="ml-2">
                           {count}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{config.description}</p>
                     </Label>
                   </div>
                 )
@@ -129,15 +116,15 @@ export function SessionSetupModal({ isOpen, onClose, examId, modeStats }: Sessio
             </Label>
             <Slider
               value={[adjustedQuestionCount]}
-              onValueChange={(value) => setQuestionCount([Math.min(value[0], maxQuestions)])}
-              max={120}
+              onValueChange={(value) => setQuestionCount([Math.min(value[0], maxQuestions || 1)])}
+              max={maxQuestions || 120}
               min={1}
               step={1}
               disabled={isStartDisabled}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>1問</span>
-              <span>{maxQuestions}問</span>
+              <span>{maxQuestions || 120}問</span>
             </div>
           </div>
 

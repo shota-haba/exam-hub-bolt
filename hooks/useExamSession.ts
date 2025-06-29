@@ -101,7 +101,8 @@ export function useExamSession({
       setTimeLeft(remaining)
       
       if (progressRef.current) {
-        progressRef.current.style.setProperty('--progress', `${progress * 100}%`)
+        // 残り時間に応じてプログレスバーを減少させる (100% → 0%)
+        progressRef.current.style.setProperty('--progress', `${(1 - progress) * 100}%`)
       }
       
       if (progress < 1 && !isAnswered) {

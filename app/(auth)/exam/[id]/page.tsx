@@ -54,7 +54,7 @@ async function ExamContent({ params, searchParams }: ExamPageProps) {
 
   if (questions.length === 0) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="px-4 py-6">
         <div className="flex flex-col items-center justify-center py-16">
           <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
           <p className="text-muted-foreground mb-6 text-center">

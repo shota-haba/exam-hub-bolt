@@ -44,8 +44,8 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   // 結果が表示されている場合の早期リターン（最優先）
   if (results) {
     return (
-      <div className="content-container">
-        <div className="flex items-center justify-between space-y-2 mb-6">
+      <div className="px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold tracking-tight">結果</h2>
         </div>
         
@@ -122,7 +122,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   // 問題が存在しない場合（初期問題リストが空の場合のみ）
   if (!currentQuestion && initialQuestionsRef.current.length === 0) {
     return (
-      <div className="content-container">
+      <div className="px-4 py-6">
         <div className="flex flex-col items-center justify-center py-16">
           <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
           <p className="text-muted-foreground mb-6 text-center">
@@ -137,7 +137,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   }
   
   return (
-    <div className="content-container">
+    <div className="px-4 py-6">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-2xl font-bold">{examSet.title}</h2>
@@ -159,7 +159,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       >
         <div 
           className="h-full bg-primary transition-all duration-75 ease-linear"
-          style={{ width: timeLimit > 0 ? 'var(--progress, 0%)' : `${((currentQuestionIndex + 1) / initialQuestionsRef.current.length) * 100}%` }}
+          style={{ width: 'var(--progress, 100%)' }}
         />
       </div>
       

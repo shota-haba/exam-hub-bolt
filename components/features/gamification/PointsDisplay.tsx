@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Trophy, Zap, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Progress } from '@/components/ui/progress'
 
 interface PointsDisplayProps {
   totalPoints: number
@@ -28,24 +30,20 @@ export function PointsDisplay({
     <Card className={cn("border shadow-sm", className)}>
       <CardContent className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              <span className="text-sm font-medium">レベル</span>
-            </div>
-            <div className="text-2xl font-bold">{level}</div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div 
-                className="bg-foreground h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {currentExp} / {currentExp + expToNext} EXP
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 bg-primary text-primary-foreground">
+              <AvatarFallback className="text-xl font-bold">{level}</AvatarFallback>
+            </Avatar>
+            <div className="space-y-2">
+              <div className="text-sm font-medium">レベル {level}</div>
+              <Progress value={progressPercentage} className="h-2 w-32" />
+              <div className="text-xs text-muted-foreground">
+                {currentExp} / {currentExp + expToNext} EXP
+              </div>
             </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-3 flex flex-col justify-center">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
@@ -68,7 +66,7 @@ export function PointsDisplay({
           </div>
           
           <div className="flex items-center justify-center">
-            <div className="text-center">
+            <div className="text-center bg-muted/50 p-3 rounded-lg w-full">
               <div className="text-sm font-medium mb-1">次のレベルまで</div>
               <div className="text-2xl font-bold">{expToNext}pt</div>
             </div>

@@ -45,7 +45,7 @@ export function LikeButton({ examId, initialLiked, initialCount }: LikeButtonPro
       size="sm"
       onClick={handleToggleLike}
       disabled={isPending}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 h-8 px-2"
     >
       <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
       <span>{likesCount}</span>
