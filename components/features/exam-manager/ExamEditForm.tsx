@@ -181,6 +181,10 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
 
   return (
     <div className="px-4 py-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">試験編集</h2>
+      </div>
+      
       {/* 基本情報 */}
       <Card className="data-card">
         <CardHeader>
@@ -205,7 +209,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
               <Label>タグ情報</Label>
               <Button type="button" variant="outline" size="sm" onClick={addTag}>
                 <Plus className="h-4 w-4 mr-2" />
-                タグ追加
+                タグ
               </Button>
             </div>
             
@@ -297,7 +301,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                                 onClick={() => addChoice(questionIndex)}
                               >
                                 <Plus className="h-4 w-4 mr-1" />
-                                選択肢追加
+                                選択肢
                               </Button>
                             </div>
                             <div className="space-y-2">
@@ -370,7 +374,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
         <div className="flex justify-center mt-6">
           <Button onClick={addNewQuestion} className="gap-2">
             <Plus className="h-4 w-4" />
-            設問追加
+            設問
           </Button>
         </div>
       </div>

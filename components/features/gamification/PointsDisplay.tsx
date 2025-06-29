@@ -2,7 +2,6 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trophy, Zap, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
@@ -45,21 +44,15 @@ export function PointsDisplay({
           
           <div className="space-y-3 flex flex-col justify-center">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <span className="text-sm font-medium">日計</span>
-              </div>
+              <span className="text-sm font-medium">日計</span>
               <Badge variant="secondary" className="font-mono">
                 {dailyPoints}pt
               </Badge>
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                <span className="text-sm font-medium">累計</span>
-              </div>
-              <Badge variant="outline" className="font-mono">
+              <span className="text-sm font-medium">累計</span>
+              <Badge variant="secondary" className="font-mono">
                 {totalPoints.toLocaleString()}pt
               </Badge>
             </div>
