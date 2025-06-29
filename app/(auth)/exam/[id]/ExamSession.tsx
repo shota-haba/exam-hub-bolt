@@ -44,12 +44,12 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   // 結果が表示されている場合の早期リターン（最優先）
   if (results) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
+      <div className="content-container">
+        <div className="flex items-center justify-between space-y-2 mb-6">
           <h2 className="text-3xl font-bold tracking-tight">結果</h2>
         </div>
         
-        <Card>
+        <Card className="data-card">
           <CardContent className="pt-6">
             <div className="grid grid-cols-3 gap-8 mb-8 text-center">
               <div>
@@ -69,7 +69,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
             <h3 className="text-lg font-semibold mb-4">設問レビュー</h3>
             <div className="space-y-4">
               {results.questions.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg">
+                <div key={index} className="p-4 border rounded-lg bg-muted/20">
                   <div className="flex items-start gap-3">
                     <div className={`p-1.5 rounded-full ${item.isCorrect ? 'bg-muted' : 'bg-destructive/10'}`}>
                       <div className={`w-3 h-3 rounded-full ${item.isCorrect ? 'bg-foreground' : 'bg-destructive'}`}></div>
@@ -122,7 +122,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   // 問題が存在しない場合（初期問題リストが空の場合のみ）
   if (!currentQuestion && initialQuestionsRef.current.length === 0) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="content-container">
         <div className="flex flex-col items-center justify-center py-16">
           <h2 className="text-2xl font-bold mb-4">学習モードに設問がありません</h2>
           <p className="text-muted-foreground mb-6 text-center">
@@ -137,8 +137,8 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
   }
   
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex justify-between items-center">
+    <div className="content-container">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-2xl font-bold">{examSet.title}</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -155,7 +155,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
       
       <div 
         ref={progressRef}
-        className="w-full bg-secondary rounded-full h-2 overflow-hidden"
+        className="w-full bg-secondary rounded-full h-2 overflow-hidden mb-4"
       >
         <div 
           className="h-full bg-primary transition-all duration-75 ease-linear"
@@ -163,7 +163,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
         />
       </div>
       
-      <Card>
+      <Card className="data-card">
         <CardContent className="pt-6">
           <h3 className="text-lg font-semibold mb-6">{currentQuestion?.text}</h3>
           
@@ -192,7 +192,7 @@ export default function ExamSession({ examSet, questions: initialQuestions }: Ex
           </div>
           
           {isAnswered && currentQuestion?.explanation && (
-            <div className="mt-6 p-4 border rounded-lg bg-muted">
+            <div className="mt-6 p-4 border rounded-lg bg-muted/30">
               <h4 className="font-medium text-sm mb-2">解説</h4>
               <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>
             </div>

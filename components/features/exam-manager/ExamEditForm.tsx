@@ -130,7 +130,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
   return (
     <div className="content-container space-y-6">
       {/* 基本情報 */}
-      <Card className="bg-card hover:bg-card/80 transition-colors">
+      <Card className="data-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Tag className="h-5 w-5" />
@@ -190,7 +190,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
       {/* 設問管理 */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold">設問一覧</h3>
+          <h3 className="section-title">設問一覧</h3>
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -203,7 +203,7 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                       <Card 
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`transition-shadow bg-card hover:bg-card/80 ${snapshot.isDragging ? 'shadow-lg' : ''}`}
+                        className={`data-card transition-shadow ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                       >
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
@@ -287,18 +287,18 @@ export function ExamEditForm({ examSet }: ExamEditFormProps) {
                   </Draggable>
                 ))}
                 {provided.placeholder}
-                
-                {/* 設問追加ボタン - 一番下に配置 */}
-                <div className="flex justify-center mt-6">
-                  <Button onClick={addNewQuestion} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    設問追加
-                  </Button>
-                </div>
               </div>
             )}
           </Droppable>
         </DragDropContext>
+        
+        {/* 設問追加ボタン - 一番下に配置 */}
+        <div className="flex justify-center mt-6">
+          <Button onClick={addNewQuestion} className="gap-2">
+            <Plus className="h-4 w-4" />
+            設問追加
+          </Button>
+        </div>
       </div>
 
       {/* 保存ボタン */}

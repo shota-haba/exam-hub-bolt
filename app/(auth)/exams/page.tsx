@@ -34,7 +34,7 @@ export default async function ExamsPage() {
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">試験一覧</h3>
+              <h3 className="section-title">試験一覧</h3>
             </div>
             
             <Suspense fallback={
@@ -72,7 +72,7 @@ async function ExamsList() {
   }
 
   return (
-    <div className="overflow-hidden rounded-md border bg-card">
+    <div className="table-container">
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>

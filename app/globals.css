@@ -39,15 +39,23 @@
 }
 
 @layer components {
-  .container {
-    @apply w-full px-4;
-  }
-  
   .content-container {
     @apply w-full max-w-[1920px] mx-auto px-4 py-6;
   }
   
   .card-grid {
     @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .table-container {
+    @apply w-full overflow-hidden rounded-md border bg-card shadow-sm;
+  }
+  
+  .data-card {
+    @apply bg-card hover:bg-card/90 transition-colors border rounded-lg shadow-sm;
+  }
+  
+  .section-title {
+    @apply text-xl font-semibold mb-4;
   }
 }

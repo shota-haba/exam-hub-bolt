@@ -58,8 +58,8 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     <div className="space-y-6">
       {mySharedExams.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold">共有中の試験</h3>
-          <div className="overflow-hidden rounded-md border bg-card">
+          <h3 className="section-title">共有中の試験</h3>
+          <div className="table-container">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
@@ -133,10 +133,10 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
       )}
       
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold">共有試験</h3>
+        <h3 className="section-title">共有試験</h3>
         
         {sharedExams.length > 0 ? (
-          <div className="overflow-hidden rounded-md border bg-card">
+          <div className="table-container">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>

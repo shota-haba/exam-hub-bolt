@@ -35,7 +35,7 @@ export function ExamImport() {
   }
 
   return (
-    <Card>
+    <Card className="data-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />

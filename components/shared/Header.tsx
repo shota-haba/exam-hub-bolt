@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { BookOpen } from 'lucide-react'
-import { PointsDisplay } from '@/components/features/gamification/PointsDisplay'
 
 export default function Header() {
   const { user, signInWithGoogle, signOut, loading } = useAuth()
@@ -91,42 +90,40 @@ export default function Header() {
               Googleでログイン
             </Button>
           ) : (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={user.user_metadata?.avatar_url || ''} 
-                        alt={user.user_metadata?.name || 'User'} 
-                      />
-                      <AvatarFallback className="text-xs">
-                        {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="text-sm font-medium">
-                        {user.user_metadata?.name || 'User'}
-                      </p>
-                      <p className="w-[200px] truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                      src={user.user_metadata?.avatar_url || ''} 
+                      alt={user.user_metadata?.name || 'User'} 
+                    />
+                    <AvatarFallback className="text-xs">
+                      {(user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="text-sm font-medium">
+                      {user.user_metadata?.name || 'User'}
+                    </p>
+                    <p className="w-[200px] truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleSignOut} 
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                  >
-                    ログアウト
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
